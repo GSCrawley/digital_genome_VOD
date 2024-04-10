@@ -1,0 +1,44 @@
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 200;
+    src: url('./typonine-light.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 400;
+    src: url('./typonine-regular.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 500;
+    src: url('./typonine-medium.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 700;
+    src: url('./typonine-bold.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 200;
+    font-style: italic;
+    src: url('./typonine-light-italic.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 400;
+    font-style: italic;
+    src: url('./typonine-regular-italic.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 500;
+    font-style: italic;
+    src: url('./typonine-medium-italic.ttf');
+}
+@font-face {
+    font-family: 'Typonine Sans';
+    font-weight: 700;
+    font-style: italic;
+    src: url('./typonine-bold-italic.ttf');
+}
