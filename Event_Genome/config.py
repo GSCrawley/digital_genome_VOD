@@ -1,5 +1,0 @@
-tg_host = "https://a2650244a8f74acc843386d4ca05645e.i.tgcloud.io"
-tg_graph_name = "Video_Genome_Platform"
-tg_username = "user_1"
-tg_password = "Oo6Bi6Qy1Po6Jt4;"
-tg_secret = "2vo8tuqin9t10bihoaah1jrb9qgoh9ec"
