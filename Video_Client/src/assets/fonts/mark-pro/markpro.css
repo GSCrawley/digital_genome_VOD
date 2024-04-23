@@ -1,0 +1,72 @@
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro-Heavy.woff2') format('woff2'),
+        url('MarkPro-Heavy.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro-HeavyItalic.woff') format('woff2'),
+        url('MarkPro-HeavyItalic.woff2') format('woff');
+    font-weight: bold;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro-HeavyItalic.woff2') format('woff2'),
+        url('MarkPro-HeavyItalic.woff') format('woff');
+    font-weight: 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro.woff2') format('woff2'),
+        url('MarkPro.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro-Heavy.woff2') format('woff2'),
+        url('MarkPro-Heavy.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro-MediumItalic.woff2') format('woff2'),
+        url('MarkPro-MediumItalic.woff') format('woff');
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro-Hairline';
+    src: url('MarkPro-Hairline.woff2') format('woff2'),
+        url('MarkPro-Hairline.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MarkPro';
+    src: url('MarkPro-Medium.woff2') format('woff2'),
+        url('MarkPro-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
