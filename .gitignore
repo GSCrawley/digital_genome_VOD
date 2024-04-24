@@ -5,8 +5,9 @@ node_modules
 .DS_Store
 .config
 config
+config.json
 
-.vscode
+
 vscode/settings.json
 .vscode/settings.json
 settings.json
