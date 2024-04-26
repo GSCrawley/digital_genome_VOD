@@ -1,9 +1,8 @@
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Home from './pages/Home';
-// import AboutUs from './pages/AboutUs';
-import Player from './pages/Player';
+import Home from './pages/Home.tsx';
+import Player from './pages/Player.tsx';
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Switch>
@@ -15,4 +14,3 @@ function App() {
   );
 }
 
-export default App;

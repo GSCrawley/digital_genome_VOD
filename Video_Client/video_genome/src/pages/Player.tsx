@@ -1,27 +1,26 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import LKUIVideoPlayer from "../components/LKUIVideoPlayer";
-import JSONTestData from "../tests/movies.json";
+import LKUIVideoPlayer from "../components/LKUIVideoPlayer.tsx";
 
-function Player() {
+
+
+
+interface Movie {
+  id: string;
+  name: string;
+  url: string;
+  subtitles?: string;
+}
+
+interface PlayerProps {
+  videos: Movie[];
+}
+
+function Player({ videos }: PlayerProps) {
   const { id } = useParams<{ id: string }>();
-  const [moviesData, setMoviesData] = useState<{ movies: Movie[] } | null>(null);
-
-  useEffect(() => {
-    // Set movies data directly from the imported JSON file
-    setMoviesData(JSONTestData);
-  }, []);
-
-  if (!moviesData) {
-    // Data not loaded yet
-    return null;
-  }
-
-  const { movies } = moviesData;
 
   // Find the movie object with the matching id
-  const selectedMovie = movies.find((movie) => movie.id === id);
+  const selectedMovie = videos.find((movie) => movie.id === id);
 
   if (!selectedMovie) {
     console.error("Movie not found for id:", id);
@@ -47,10 +46,3 @@ function Player() {
 }
 
 export default Player;
-
-interface Movie {
-  id: string;
-  name: string;
-  url: string;
-  subtitles?: string;
-}

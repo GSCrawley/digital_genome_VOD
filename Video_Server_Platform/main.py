@@ -6,12 +6,12 @@ import logging
 
 dotenv.load_dotenv()
 
-app = Flask(__name__, template_folder='../video_client/templates')
+app = Flask(__name__, template_folder='./templates')
 
 
 s3 = boto3.client('s3',
-                  aws_access_key_id=os.getenv('YOUR_ACCESS_KEY'),
-                  aws_secret_access_key=os.getenv('YOUR_SECRET_KEY'))
+                  aws_access_key_id=os.getenv('AKIAT4BYMASPNVQ4GRZV'),
+                  aws_secret_access_key=os.getenv('d6owVPAn6+au9LvtMNVX8xZn6Q0EQWA51L3TG3r/'))
 
 def generate_s3_presigned_url(bucket_name, object_name, expiration=3600):
     """Generate a presigned URL to share an S3 object
@@ -33,18 +33,38 @@ def generate_s3_presigned_url(bucket_name, object_name, expiration=3600):
         logging.error(e)
         return None
 
+    print(response)
     # The response contains the presigned URL
     return response
-    
+
 @app.route('/')
 def index():
-    presigned_url = generate_s3_presigned_url('gidvidbucket', 'the_divine_proportion.mp4')
+    # presigned_url = generate_s3_presigned_url('gidvidbucket', 'on-failure...mp4')
+    presigned_url = "https://gidvidbucket.s3.amazonaws.com/on-failure...mp4?AWSAccessKeyId=AKIAT4BYMASPNVQ4GRZV&Signature=iMNDFuk4U0PAuh3iYRDnkriwp1M%3D&Expires=1714090711"
     return render_template('index.html', presigned_url=presigned_url)
 
+# from botocore.exceptions import NoCredentialsError
+
+# @app.route('/videos', methods=['GET'])
+# def list_videos():
+#     s3 = boto3.client('s3')
+#     try:
+#         response = s3.list_objects(Bucket='gidvidbucket')
+#     except NoCredentialsError as e:
+#         logging.error(e)
+#         return None
+
+#     presigned_urls = []
+#     for file in response['Contents']:
+#         url = s3.generate_presigned_url('get_object', Params={'Bucket': 'gidvidbucket', 'Key': file['Key']}, ExpiresIn=3600)
+#         presigned_urls.append(url)
+
+#     return jsonify(presigned_urls)
 # @app.route('/', methods=['POST'])
 # def upload_file():
 #     file = request.files['file']
 #     s3.upload_fileobj(file, 'gidvidbucket', file.filename)
 #     return redirect(url_for('index'))
-if __name__ == '__main__':
-    app.run(debug=True)
+    
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
