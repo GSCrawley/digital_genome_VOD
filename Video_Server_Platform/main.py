@@ -13,7 +13,7 @@ s3 = boto3.client('s3',
                   aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
                   aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
 
-def generate_s3_presigned_url(bucket_name, object_name, expiration=3600):
+def generate_s3_presigned_url(bucket_name, object_name, expiration=48000):
     """Generate a presigned URL to share an S3 object
 
     :param bucket_name: string
