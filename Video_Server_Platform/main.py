@@ -10,8 +10,8 @@ app = Flask(__name__, template_folder='./templates')
 
 
 s3 = boto3.client('s3',
-                  aws_access_key_id=os.getenv('AKIAT4BYMASPNVQ4GRZV'),
-                  aws_secret_access_key=os.getenv('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'))
+                  aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                  aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'))
 
 def generate_s3_presigned_url(bucket_name, object_name, expiration=3600):
     """Generate a presigned URL to share an S3 object
