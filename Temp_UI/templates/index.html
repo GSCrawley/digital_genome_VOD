@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+    <video width="640" height="480" controls>
+            <source src="{{ public_url }}" type="video/mp4"/>
+        </video> 
+   
+</body>
+</html>
+
+<!-- once bucket contains many videos and capacity to add and delete from list is added, url will mo longer be public, but will need to switch back to 
+using 'presigned_url' and included an expiration value. for now, just for convenience's sake I am keeping urls public -->
