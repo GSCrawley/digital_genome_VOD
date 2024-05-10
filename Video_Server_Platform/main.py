@@ -33,6 +33,8 @@ def index():
     public_url = generate_s3_public_url('gidvidbucket', 'the_divine_proportion.mp4')
     # send to temp_ui
     return jsonify(public_url)
+
+
 # from botocore.exceptions import NoCredentialsError
 
 # @app.route('/videos', methods=['GET'])
