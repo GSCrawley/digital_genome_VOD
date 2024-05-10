@@ -12,11 +12,12 @@
 
 # Event Flow
 
-### Video Service Genome (VSG) reads the service metamodel (nodes, node container images, and their connections)
+### User registers creating a new account
 
-### Spins up Autopoietic Manager (APM) and Cognitive Network Manager (CNM) and gives the details to CNM (Node urls and connections between nodes.)
+### User Logs In
+### User is presented with list of videos in their account, which are stored in AWS S3 bucket. They can play a video, upload a new video, or delete a video.
+### They can also adjust the video player size, volume, and playback speed.
 
-### CNM sets up the connections and publishes the service url for users to access the service (service Durl to the client NS function).
+### The global associative memory and event history will have memory of current video buffer status and when a server shuts down, new server will start the video from the last read. The way this will work is an event history will be established through event listeners in the player (play/pause, ffwd, rwnd, stop, as well as player and buffer heads). The player head in the player will record the current timestamp and send it to the buffer head in the video client, constantly updating the buffer status so that the video client can play the video from the last read. This event history will be stored in Event_History_Genome
 
-### User connects to service url.
 ### CNM resolves the service url to the client and sets up the connection between the user and the client. Client is already connected to the server and the service is delivered from server to the user through the client.
