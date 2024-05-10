@@ -68,11 +68,11 @@ event_id = create_vertex("Events", {
     "type": "Play",
     "Timestamp": "2021-01-01T00:00:00Z"
 })
-# Create Autopoietic Manager (APM) vertices
-apm_id = create_vertex("Autopoietic_Manager", {
-    "manager_id": "APM1",
-    "status": "Monitoring"
-})
+# # Create Autopoietic Manager (APM) vertices
+# apm_id = create_vertex("Autopoietic_Manager", {
+#     "manager_id": "APM1",
+#     "status": "Monitoring"
+# })
 
 # Create edges between vertices
 create_edge("User", user_id, "Watches", "Video_Content", content_id)
