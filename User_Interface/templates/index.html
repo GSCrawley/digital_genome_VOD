@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming</title>
+</head>
+<body>
+    <h1>Video Streaming</h1>
+    <p id="current_server">Currently streaming from: </p>
+    <video controls autoplay>
+        <source src="{{ url_for('video_feed') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        function updateServerURL() {
+            fetch('/current_server_url')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('current_server').textContent = 'Currently streaming from: ' + data;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // Update the server URL every 5 seconds
+        setInterval(updateServerURL, 5000);
+    </script>
+</body>
+</html>
