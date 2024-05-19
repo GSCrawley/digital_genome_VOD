@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Streaming</title>
+
+ 
 </head>
 <body>
     <h1>Video Streaming</h1>
     <p id="current_server">Currently streaming from: </p>
-    <video controls autoplay>
+    <video style="width:640px; height:480px" controls autoplay>
         <source src="{{ url_for('video_feed') }}" type="video/mp4">
         Your browser does not support the video tag.
     </video>
