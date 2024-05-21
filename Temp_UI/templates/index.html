@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <!-- Video Selection Dropdown -->
+    <select id="videoSelect" onchange="updateVideoPlayer()">
+        {% for video_url in video_list %}
+            <option value="{{ video_url }}">{{ video_url }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- Video Player -->
+    <video id="videoPlayer" width="640" height="480" controls>
+        <source src="" type="video/mp4"/>
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        function updateVideoPlayer() {
+            var selectedVideo = document.getElementById('videoSelect').value;
+            var player = document.getElementById('videoPlayer');
+            player.src = selectedMediaType;
+            player.load(); // Important to reload the new source
+        }
+    </script>
+
+</body>
+</html>
+
+<!-- once bucket contains many videos and capacity to add and delete from list is added, url will mo longer be public, but will need to switch back to 
+using 'presigned_url' and included an expiration value. for now, just for convenience's sake I am keeping urls public -->

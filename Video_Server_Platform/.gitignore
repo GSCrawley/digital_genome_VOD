@@ -1,5 +1,6 @@
 .env
 .DS_Store
+<<<<<<< HEAD
 .myenv
 myenv
 env
@@ -13,3 +14,7 @@ myenv/bin/
 include
 myenv/include
 Dockerfile
+=======
+
+env
+>>>>>>> 43c4081486c8a138f25db662d19c18a5db125525
