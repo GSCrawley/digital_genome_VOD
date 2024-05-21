@@ -9,7 +9,6 @@ app = Flask(__name__)
 def index():
     return("stream working")
 
-
 @app.route('/video_feed')
 def video_feed():
     def generate():

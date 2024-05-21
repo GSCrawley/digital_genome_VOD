@@ -5,7 +5,7 @@ import time
 
 app = Flask(__name__)
 
-STREAMING_SERVERS = ['http://localhost:5001', 'http://localhost:5002']
+STREAMING_SERVERS = ['http://localhost:5001', 'http://localhost:5002/']
 
 class VideoStreamer:
     def __init__(self):
@@ -32,21 +32,24 @@ class VideoStreamer:
         for thread in threads:
             thread.join()
 
-
     def get_video_stream(self):
         while True:
             with self.lock:
                 current_response = self.responses[self.current_server_index]
                 if current_response:
-                    current_playtime = time.time() - self.playtime  # Calculate current playtime
-                    for chunk in current_response.iter_content(chunk_size=512):
-                        yield chunk
-                        if time.time() - self.playtime > current_playtime:
-                            # Update playtime after yielding a chunk
-                            self.playtime = time.time()
+                    try:
+                        current_playtime = time.time() - self.playtime  # Calculate current playtime
+                        for chunk in current_response.iter_content(chunk_size=512):
+                            yield chunk
+                            if time.time() - self.playtime > current_playtime:
+                                # Update playtime after yielding a chunk
+                                self.playtime = time.time()
+                        current_response = self.responses[self.current_server_index]  # Get a new response
+                    except requests.exceptions.StreamConsumedError:
+                        # If the stream has already been consumed, switch servers
+                        self.switch_server()
                 else:  # If current server is not available
                     self.switch_server()
-                    continue  # Continue streaming from the next server without waiting
 
                 next_server_index = (self.current_server_index + 1) % len(STREAMING_SERVERS)
                 next_response = self.responses[next_server_index]
@@ -89,33 +92,6 @@ def current_server_url():
 @app.route('/video_feed')
 def video_feed():
     return Response(video_streamer.get_video_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-# @app.route('/video_feed/play', methods=['POST'])
-# def play():
-#     # Code to handle the play action
-#     return 'Play action triggered'
-
-
-# @app.route('/video_feed/pause', methods=['POST'])
-# def pause():
-#     # Code to handle the pause action
-#     return 'Pause action triggered'
-
-# @app.route('/stop', methods=['POST'])
-# def stop():
-#     # Code to handle the stop action
-#     return 'Stop action triggered'
-
-# @app.route('/rewind', methods=['POST'])
-# def rewind():
-#     # Code to handle the rewind action
-#     return 'Rewind action triggered'
-
-# @app.route('/fast-forward', methods=['POST'])
-# def fast_forward():
-#     # Code to handle the fast-forward action
-#     return 'Fast-forward action triggered'
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
