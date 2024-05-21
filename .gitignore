@@ -6,7 +6,18 @@ node_modules
 .config
 config
 config.json
-
+.myenv
+myenv
+env
+myenv/
+/myenv
+/bin
+.bin
+bin
+myenv/bin
+myenv/bin/
+include
+myenv/include
 
 vscode/settings.json
 .vscode/settings.json
