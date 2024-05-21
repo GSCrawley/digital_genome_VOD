@@ -4,7 +4,9 @@ node_modules
 /node_modules/
 .DS_Store
 .config
-config
+confi
+config.py
+Dockerfile
 config.json
 .myenv
 myenv
@@ -22,4 +24,7 @@ myenv/include
 vscode/settings.json
 .vscode/settings.json
 settings.json
+
+__pycache__
+*.pyc
 
