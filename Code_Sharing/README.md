@@ -1,1 +1,0 @@
-# this folder is for sharing code suggestions before actually working the code in to the project. please create a new file each time you have something to share, and be sure to name the file appropriately so that it's fairly obvious what's in it. 
