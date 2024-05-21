@@ -13,3 +13,8 @@ myenv/bin/
 include
 myenv/include
 Dockerfile
+config
+.config
+config.json
+config.py
+json

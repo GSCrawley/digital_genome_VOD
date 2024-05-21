@@ -12,3 +12,4 @@ myenv/bin
 myenv/bin/
 include
 myenv/include
+Dockerfile
