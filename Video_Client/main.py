@@ -1,4 +1,5 @@
-from flask import Flask, Response
+# Video Client Server
+from flask import Flask, Response, request
 import sys
 import requests
 
@@ -9,10 +10,18 @@ app = Flask(__name__)
 def index():
     return("stream working")
 
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    global url_dict
+    data = request.get_json()
+    url_dict = data
+    print("URLS:", url_dict)
+    return("hi")
+
 @app.route('/video_feed')
 def video_feed():
     def generate():
-        response = requests.get('http://localhost:8080/')  # Replace with the actual URL of your server
+        response = requests.get(url_dict['video_server'])  # Replace with the actual URL of your server
         video_url = response.text
         print(f'Video URL: {video_url}')  # Print the video URL
         video_response = requests.get(video_url, stream=True)
