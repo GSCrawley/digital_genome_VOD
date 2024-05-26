@@ -1,71 +1,85 @@
 # Video Client Server
 from flask import Flask, Response, request, render_template, jsonify
+from dotenv import load_dotenv
 import sys
 import requests
 import boto3
+from botocore.exceptions import NoCredentialsError, ClientError
+import os
+
+load_dotenv()  
 
 app = Flask(__name__)
 url_dict = {}  # Initialize the URL dictionary to store video URLs
+
+bucket_name = os.getenv('S3_BUCKET_NAME')
 
 @app.route('/')
 def index():
     return "stream working"
 
-@app.route('/setup', methods=['GET','POST'])
-def setup():
-    global url_dict
-    data = request.get_json()
-    url_dict = data
-    print("URLs:", url_dict)
-    return "Setup successful"
-
 def generate_presigned_url(bucket_name, video_key):
-    s3_client = boto3.client('s3')
-    presigned_url = s3_client.generate_presigned_url(
-        'get_object',
-        Params={'Bucket': bucket_name, 'Key': video_key},
-        ExpiresIn=3600
-    )
-    return presigned_url
+    try:
+        s3_client = boto3.client('s3',
+                            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                            aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
+                            region_name=os.getenv('AWS_REGION'))
+        presigned_url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name, 'Key': video_key},
+            ExpiresIn=14400
+        )
+        return presigned_url
+    except NoCredentialsError:
+        print("No AWS credentials found.")
+        return None
+    except ClientError as e:
+        print(f"Client error: {e}")
+        return None
+    except Exception as e:
+        # This will catch any other exceptions that are not specific to AWS
+        print(f"Unexpected error: {e}")
+        return None
 
 @app.route('/video/<video_key>')
 def get_video(video_key):
-    bucket_name = 'gidvidbucket'
     presigned_url = generate_presigned_url(bucket_name, video_key) # Function to generate presigned URL for the selected video
-    return render_template('video_player.html', video_url=presigned_url)
+    if presigned_url:
+        return jsonify({'presigned_url': presigned_url})
+    else:
+        return jsonify({'error': 'Failed to generate presigned URL'}), 500
 
-@app.route('/get_presigned_url', methods=['POST'])
-def get_presigned_url():
-    video_key = request.json.get('video_key')  # Assuming the video key is sent in the request JSON
-    if not video_key:
-        return jsonify({'error': 'Video key is required in the request'}), 400
+# The following route will be used when we add video upload capability:
 
-    presigned_url = generate_presigned_url(bucket_name, video_key)  # Using the generate_presigned_url function
+# @app.route('/receive_video', methods=['POST'])
+# def receive_video():
+#     if 'video' not in request.files:
+#         return jsonify({'error': 'No video file part'}), 400
 
-    return jsonify({'presigned_url': presigned_url})
+#     video_file = request.files['video']
+    
+#     if video_file.filename == '':
+#         return jsonify({'error': 'No selected file'}), 400
 
-@app.route('/video_feed', methods=['POST'])
-def video_feed():
-    selected_video = request.json.get('selected_video')  # Get the selected video from the User Interface
-    if selected_video not in url_dict:
-        return "Selected video not found in the list", 404
+#     if video_file and allowed_file(video_file.filename):
+#         # Here you would typically process the file and then upload it to S3
+#         # For example, you could save the file temporarily and then use boto3 to upload
+#         # Or you could stream the file directly to S3 without saving it locally
 
-    video_url = url_dict[selected_video]
-    print(f'Selected Video URL: {video_url}')  # Print the selected video URL
-    video_response = requests.get(video_url, stream=True)
-    print(f'Video response status code: {video_response.status_code}')  # Print the status code of the video response
+#         # ... (Your S3 upload logic)
 
-    def generate():
-        if video_response.status_code == 200:
-            for chunk in video_response.iter_content(chunk_size=1024):
-                if not chunk:
-                    break
-                yield chunk
-        else:
-            print(f'Error fetching video: {video_response.status_code}')
-            yield b'Error fetching video'
+#         return jsonify({'message': 'Video successfully received'}), 200
+#     else:
+#         return jsonify({'error': 'Invalid file type'}), 400
 
-    return Response(generate(), mimetype='video/mp4')
+# def allowed_file(filename):
+#     # Check if the file has one of the allowed extensions
+#     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Define the set of allowed file extensions (e.g., 'mp4', 'avi', 'mov', etc.)
+# ALLOWED_EXTENSIONS = set(['mp4', 'avi', 'mov'])
+
 
 if __name__ == '__main__':
     port = 5001  # Default port

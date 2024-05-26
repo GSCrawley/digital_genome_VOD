@@ -11,11 +11,11 @@
     <h1>Video Streaming</h1>
     <p id="current_server">Currently streaming from: </p>
     <video style="width:640px; height:480px" controls autoplay>
-        <source src="{{ url_for('video_feed') }}" type="video/mp4">
+        <source src="{{ video_url }}" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 
-    <script>
+    <!-- <script>
         function updateServerURL() {
             fetch('/current_server_url')
                 .then(response => response.text())
@@ -29,6 +29,6 @@
 
         // Update the server URL every 5 seconds
         setInterval(updateServerURL, 5000);
-    </script>
+    </script> -->
 </body>
 </html>
