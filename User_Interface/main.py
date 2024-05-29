@@ -1,52 +1,84 @@
 # UI main.py
 import requests
+import time
+import threading
 from flask import Flask, render_template, Response, request, jsonify, redirect, url_for
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
+socketio = SocketIO(app)
+url_dict = None  # Initialize url_dict globally
+primary_url = None
+backup_url = None
+current_url = None
+lock = threading.Lock()
 
-VIDEO_SERVER_PLATFORM_URL = 'http://localhost:5005'
-VIDEO_CLIENT_URL = 'http://localhost:5001'
 
-# Define a route to display the video list and handle video selection
+def check_primary_availability():
+    global primary_url, backup_url, current_url
+    while True:
+        with lock:
+            try:
+                response = requests.get(primary_url)
+                if response.status_code != 200:
+                    current_url = backup_url
+                else:
+                    current_url = primary_url
+            except requests.ConnectionError:
+                current_url = backup_url
+        # Sleep for some time before checking again
+        time.sleep(5)
+
+# Start the thread to continuously check primary URL availability
+check_thread = threading.Thread(target=check_primary_availability)
+check_thread.daemon = True
+check_thread.start()
+
+# Define a route to display the video list nd handle video selection
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    global url_dict, primary_url, backup_url, current_url
+    data = request.get_json()
+    url_dict = data
+    primary_url = url_dict['video_client'][0]
+    backup_url = url_dict['video_client'][1]
+    current_url = primary_url  # Initially set current URL to primary URL
+    return "hi"
+
 @app.route('/')
 def index():
-     # Fetch the list of videos from Video_Server_Platform
-    response = requests.get(f'{VIDEO_SERVER_PLATFORM_URL}/videos')
+    global current_url
+    response = requests.get(f"{current_url}/videos")
     videos = response.json() if response.status_code == 200 else []
-    
     return render_template('video_list.html', videos=videos)
 
-# Define a route to handle the selection of a video and generate a presigned URL
 @app.route('/select_video', methods=['POST'])
 def select_video():
     selected_video = request.form['video']
-    # Generate presigned URL for the selected video by requesting it from the Video Client
-    response = requests.get(f'{VIDEO_CLIENT_URL}/video/{selected_video}')
-    
-    if response.status_code == 200:
-        # Extract the presigned url from the response
-        presigned_url = response.json().get('presigned_url')
-        if presigned_url:
-            # Render the video player template with the presigned URL
-            return render_template('video_player.html', video_url=presigned_url)
-        else:
-            # If the 'presigned_url' key is not in the response, handle the error
-            error_message = response.json().get('error', 'Unknown error.')
-            return jsonify({'error': error_message}), 500
-    else:
-        # If the response status code is not 200, handle the error
-        return jsonify({'error': 'Failed to generate presigned URL'}), response.status_code
-
+    # Redirect to video feed route with selected video key
+    return redirect(url_for('video_feed', video_key=selected_video))
 
 @app.route('/video_feed/<video_key>', methods=['GET'])
 def video_feed(video_key):
-    # Request presigned URL from Video Client
-    response = requests.get(f'{VIDEO_CLIENT_URL}/video/{video_key}')
-    if response.status_code == 200:
-        presigned_url = response.json().get('presigned_url')
-        return render_template('video_player.html', video_url=presigned_url)
-    else:
-        return jsonify({'error': 'Failed to retrieve video'}), response.status_code
+    global current_url
+    try:
+        response = requests.get(f"{current_url}/video/{video_key}", stream=True)
+        print(current_url)
+        if response.status_code == 200:
+            return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
+    except requests.ConnectionError:
+        pass  # Connection to current URL failed, switch to backup URL
+    
+    # If connection to current URL failed, try to fetch from backup URL
+    try:
+        response = requests.get(f"{backup_url}/video/{video_key}", stream=True)
+        print(backup_url)
+        if response.status_code == 200:
+            return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
+    except requests.ConnectionError:
+        pass  # Both primary and backup URLs are unavailable
+    
+    return jsonify({'error': 'Failed to retrieve video'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

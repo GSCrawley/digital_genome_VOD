@@ -13,3 +13,4 @@ myenv/bin/
 include
 myenv/include
 Dockerfile
+/node_modules

@@ -1,34 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Streaming</title>
-
- 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video.js Player</title>
+  <!-- Video.js CSS -->
+  <link href="https://vjs.zencdn.net/7.18.1/video-js.css" rel="stylesheet">
+  <style>
+    .video-js {
+      width: 100%;
+      max-width: 600px;
+    }
+  </style>
 </head>
 <body>
+    <div id="server_url">
     <h1>Video Streaming</h1>
-    <p id="current_server">Currently streaming from: </p>
-    <video style="width:640px; height:480px" controls autoplay>
+    <p id="current_server">Currently streaming from: {{current_server_url}} </p>
+</div>
+    <div id="videoPlayerContainer">
+    <video
+      id="my-video"
+      class="video-js"
+      controls
+      preload="auto"
+      width="640"
+      height="480"
+      data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'>
+
         <source src="{{ video_url }}" type="video/mp4">
         Your browser does not support the video tag.
+        <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a
+            web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+      </p>
     </video>
+  </div>
 
-    <!-- <script>
-        function updateServerURL() {
-            fetch('/current_server_url')
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('current_server').textContent = 'Currently streaming from: ' + data;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-        }
+  <!-- Video.js JavaScript -->
+  <!-- <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 
-        // Update the server URL every 5 seconds
-        setInterval(updateServerURL, 5000);
-    </script> -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      var player = videojs('my-video', {
+        playbackRates: [0.5, 1, 1.5, 2],
+        autoplay: false,
+        loop: false
+      });
+      var socket = io.connect('http://localhost:5001');
+      var lastUpdateTime = Date.now();
+
+  player.on('play', function() {
+    socket.emit('play', {time: player.currentTime()});
+  });
+
+  player.on('pause', function() {
+    socket.emit('pause', {time: player.currentTime()});
+  });
+
+  player.on('timeupdate', function() {
+    var now = Date.now();
+    if (now - lastUpdateTime > 1000) {  // Only emit event if more than 1 second has passed
+      console.log('Emitting timeupdate event with data:', {time: player.currentTime()});
+      socket.emit('timeupdate', {time: player.currentTime()});
+      lastUpdateTime = now;
+    }
+  });
+});
+</script>
+    // function updateServerURL() {
+    //         fetch('/current_server_url')
+    //             .then(response => response.text())
+    //             .then(data => {
+    //                 document.getElementById('current_server').textContent = 'Currently streaming from: ' + data;
+    //             })
+    //             .catch(error => {
+    //                 console.error('Error:', error);
+    //             });
+    //     }
+
+    //     // Update the server URL every 5 seconds
+    //     setInterval(updateServerURL, 5000);
 </body>
 </html>

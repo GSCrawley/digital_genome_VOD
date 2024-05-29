@@ -1,5 +1,6 @@
 # Video Client Server
 from flask import Flask, Response, request, render_template, jsonify
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import sys
 import requests
@@ -10,46 +11,56 @@ import os
 load_dotenv()  
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 url_dict = {}  # Initialize the URL dictionary to store video URLs
 
 bucket_name = os.getenv('S3_BUCKET_NAME')
+
+@socketio.on('play')
+def handle_play_event(data):
+    print('Video is playing at', data['time'])
+
+@socketio.on('pause')
+def handle_pause_event(data):
+    print('Video is paused at', data['time'])
+
+@socketio.on('timeupdate')
+def handle_timeupdate_event(data):
+    print('Video time updated:', data['time'])
 
 @app.route('/')
 def index():
     return "stream working"
 
-def generate_presigned_url(bucket_name, video_key):
-    try:
-        s3_client = boto3.client('s3',
-                            aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                            aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-                            aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
-                            region_name=os.getenv('AWS_REGION'))
-        presigned_url = s3_client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': bucket_name, 'Key': video_key},
-            ExpiresIn=14400
-        )
-        return presigned_url
-    except NoCredentialsError:
-        print("No AWS credentials found.")
-        return None
-    except ClientError as e:
-        print(f"Client error: {e}")
-        return None
-    except Exception as e:
-        # This will catch any other exceptions that are not specific to AWS
-        print(f"Unexpected error: {e}")
-        return None
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    global url_dict
+    data = request.get_json()
+    url_dict = data
+    print("DATA", data)
+    return "hi"
+
+@app.route('/videos', methods=['GET', 'POST'])
+def fetch_video_list():
+    response = requests.get(f"{url_dict['video_server']}/videos")
+    videos = response.json() if response.status_code == 200 else []
+    return videos
 
 @app.route('/video/<video_key>')
-def get_video(video_key):
-    presigned_url = generate_presigned_url(bucket_name, video_key) # Function to generate presigned URL for the selected video
-    if presigned_url:
-        return jsonify({'presigned_url': presigned_url})
+def stream_video(video_key):
+    # Request presigned URL from Video Server
+    data = video_key
+    response = requests.post(f"{url_dict['video_server']}/presigned", json=data)
+    if response.status_code == 200:
+        presigned_url = response.json().get('presigned_url')
+        # Proxy the video content from presigned URL to the client
+        def generate():
+            with requests.get(presigned_url, stream=True) as r:
+                for chunk in r.iter_content(chunk_size=1024):
+                    yield chunk
+        return Response(generate(), mimetype='video/mp4')
     else:
-        return jsonify({'error': 'Failed to generate presigned URL'}), 500
-
+        return jsonify({'error': 'Failed to retrieve video'}), response.status_code
 # The following route will be used when we add video upload capability:
 
 # @app.route('/receive_video', methods=['POST'])
@@ -85,4 +96,4 @@ if __name__ == '__main__':
     port = 5001  # Default port
     if len(sys.argv) > 1:
         port = int(sys.argv[1])
-    app.run(host='0.0.0.0', port=port)
+    socketio.run(app, host='0.0.0.0', port=port)
