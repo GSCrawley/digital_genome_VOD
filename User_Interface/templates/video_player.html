@@ -1,87 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video.js Player</title>
-  <!-- Video.js CSS -->
-  <link href="https://vjs.zencdn.net/7.18.1/video-js.css" rel="stylesheet">
-  <style>
-    .video-js {
-      width: 100%;
-      max-width: 600px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Video Player</title>
+    <!-- Video.js CSS -->
+    <link href="https://vjs.zencdn.net/7.18.1/video-js.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            /* background-color: #000; */
+            color: #fff;
+        }
+        .video-js {
+            width: 640px;
+            height: 480px;
+        }
+        #videoPlayerContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* width: 75%; */
+            height: auto; /* Adjust as needed */
+        }
+        #modal {
+            position: fixed;
+            top: 60%; /* Adjust as needed */
+            left: 50%;
+            background: white !important;
+            color: black !important;
+            padding: 10px;
+            border: 1px solid black;
+            z-index: 10000 !important;
+            cursor: move;
+        }
+        #modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+        }
+        #modal-content {
+            margin-top: 10px;
+        }
+        #close-button {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #log {
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <div id="server_url">
-    <h1>Video Streaming</h1>
-    <p id="current_server">Currently streaming from: {{current_server_url}} </p>
-</div>
-    <div id="videoPlayerContainer">
-    <video
-      id="my-video"
-      class="video-js"
-      controls
-      preload="auto"
-      width="640"
-      height="480"
-      data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'>
+    <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'> 
+            <source src="{{ video_url }}" type="video/mp4">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+            </p>
+        </video>
+        <div id="modal-header">
+            <span>Currently streaming from: <span id="current_server">{{ current_server_url }}</span></span>
+            <button id="close-button">&times;</button>
+        </div>
+        <div id="modal-content">
+            <div>Current elapsed time: <span id="elapsed_time">0</span> seconds</div>
+            <div id="log"></div>
+        </div>
 
-        <source src="{{ video_url }}" type="video/mp4">
-        Your browser does not support the video tag.
-        <p class="vjs-no-js">
-            To view this video please enable JavaScript, and consider upgrading to a
-            web browser that
-            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-      </p>
-    </video>
-  </div>
+    <!-- Video.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.18.1/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script> 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            var player = videojs('my-video');
+            var socket = io.connect('http://localhost:5001', 'http://localhost:5002'); // Adjust as necessary
+            var currentServer = document.getElementById('current_server');
+            var elapsedTimeElem = document.getElementById('elapsed_time');
+            var logElem = document.getElementById('log');
+            var lastUpdateTime = player.currentTime();
 
-  <!-- Video.js JavaScript -->
-  <!-- <script src="https://vjs.zencdn.net/7.18.1/video.min.js"></script> -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+            // Handlers for video playback events
+            player.on('play', function() {
+                socket.emit('play', { time: player.currentTime() });
+                addLog('Play');
+            });
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-      var player = videojs('my-video', {
-        playbackRates: [0.5, 1, 1.5, 2],
-        autoplay: false,
-        loop: false
-      });
-      var socket = io.connect('http://localhost:5001');
-      var lastUpdateTime = Date.now();
+            player.on('pause', function() {
+                socket.emit('pause', { time: player.currentTime() });
+                addLog('Pause');
+            });
 
-  player.on('play', function() {
-    socket.emit('play', {time: player.currentTime()});
-  });
+            player.on('timeupdate', function() {
+                var now = Date.now();
+                elapsedTimeElem.textContent = Math.floor(player.currentTime());
+                if (now - lastUpdateTime > 1000) {
+                    socket.emit('timeupdate', { time: player.currentTime() });
+                    lastUpdateTime = now;
+                }
+            });
 
-  player.on('pause', function() {
-    socket.emit('pause', {time: player.currentTime()});
-  });
+            // Listen for server switch events
+            socket.on('server_switch', function(data) {
+                currentServer.textContent = data.new_server;
+                addLog('Switched to ' + data.new_server);
+            });
 
-  player.on('timeupdate', function() {
-    var now = Date.now();
-    if (now - lastUpdateTime > 1000) {  // Only emit event if more than 1 second has passed
-      console.log('Emitting timeupdate event with data:', {time: player.currentTime()});
-      socket.emit('timeupdate', {time: player.currentTime()});
-      lastUpdateTime = now;
-    }
-  });
-});
-</script>
-    // function updateServerURL() {
-    //         fetch('/current_server_url')
-    //             .then(response => response.text())
-    //             .then(data => {
-    //                 document.getElementById('current_server').textContent = 'Currently streaming from: ' + data;
-    //             })
-    //             .catch(error => {
-    //                 console.error('Error:', error);
-    //             });
-    //     }
+            function addLog(message) {
+                var logMessage = document.createElement('div');
+                logMessage.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+                logElem.appendChild(logMessage);
+                logElem.scrollTop = logElem.scrollHeight;
+            }
 
-    //     // Update the server URL every 5 seconds
-    //     setInterval(updateServerURL, 5000);
+            // Draggable modal
+            var modal = document.getElementById('modal');
+            var modalHeader = document.getElementById('modal-header');
+            var closeButton = document.getElementById('close-button');
+
+            var offsetX, offsetY;
+
+            modalHeader.onmousedown = function(e) {
+                offsetX = e.clientX - modal.offsetLeft;
+                offsetY = e.clientY - modal.offsetTop;
+                document.onmousemove = function(e) {
+                    modal.style.left = (e.clientX - offsetX) + 'px';
+                    modal.style.top = (e.clientY - offsetY) + 'px';
+                }
+                document.onmouseup = function() {
+                    document.onmousemove = null;
+                    document.onmouseup = null;
+                }
+            }
+
+            closeButton.onclick = function() {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>

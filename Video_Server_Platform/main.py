@@ -1,9 +1,9 @@
-# Video Server
+# Video_Server
 from flask import Flask, request, redirect, url_for, jsonify
 from dotenv import load_dotenv
 import boto3
 import os
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import NoCredentialsError, ClientError
 
 load_dotenv()
 
@@ -11,6 +11,7 @@ app = Flask(__name__)
 
 aws_region = os.getenv('AWS_REGION')
 bucket_name = os.getenv('S3_BUCKET_NAME')
+S3_BUCKET_NAME='gidvidbucket'
 
 @app.route('/presigned', methods=['GET', 'POST'])
 def generate_presigned_url():
@@ -40,7 +41,7 @@ def generate_presigned_url():
         # This will catch any other exceptions that are not specific to AWS
         print(f"Unexpected error: {e}")
         return("ERR")
-    
+
 def fetch_video_list(bucket_name):
     s3 = boto3.client('s3',
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),

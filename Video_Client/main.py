@@ -1,4 +1,4 @@
-# Video Client Server
+# Video_Client
 from flask import Flask, Response, request, render_template, jsonify
 from flask_socketio import SocketIO
 from dotenv import load_dotenv
@@ -11,22 +11,9 @@ import os
 load_dotenv()  
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 url_dict = {}  # Initialize the URL dictionary to store video URLs
-
+socketio = SocketIO(app, cors_allowed_origins='*')
 bucket_name = os.getenv('S3_BUCKET_NAME')
-
-@socketio.on('play')
-def handle_play_event(data):
-    print('Video is playing at', data['time'])
-
-@socketio.on('pause')
-def handle_pause_event(data):
-    print('Video is paused at', data['time'])
-
-@socketio.on('timeupdate')
-def handle_timeupdate_event(data):
-    print('Video time updated:', data['time'])
 
 @app.route('/')
 def index():
@@ -50,8 +37,14 @@ def fetch_video_list():
 def stream_video(video_key):
     # Request presigned URL from Video Server
     data = video_key
+    # TODO:
+    # Here is the event for when a video is selected
+    # EVENT!!!
+
     response = requests.post(f"{url_dict['video_server']}/presigned", json=data)
     if response.status_code == 200:
+        # TODO:
+        # Try to find a way to get the video from the video_server rather than directly from the s3!!!
         presigned_url = response.json().get('presigned_url')
         # Proxy the video content from presigned URL to the client
         def generate():
@@ -61,36 +54,6 @@ def stream_video(video_key):
         return Response(generate(), mimetype='video/mp4')
     else:
         return jsonify({'error': 'Failed to retrieve video'}), response.status_code
-# The following route will be used when we add video upload capability:
-
-# @app.route('/receive_video', methods=['POST'])
-# def receive_video():
-#     if 'video' not in request.files:
-#         return jsonify({'error': 'No video file part'}), 400
-
-#     video_file = request.files['video']
-    
-#     if video_file.filename == '':
-#         return jsonify({'error': 'No selected file'}), 400
-
-#     if video_file and allowed_file(video_file.filename):
-#         # Here you would typically process the file and then upload it to S3
-#         # For example, you could save the file temporarily and then use boto3 to upload
-#         # Or you could stream the file directly to S3 without saving it locally
-
-#         # ... (Your S3 upload logic)
-
-#         return jsonify({'message': 'Video successfully received'}), 200
-#     else:
-#         return jsonify({'error': 'Invalid file type'}), 400
-
-# def allowed_file(filename):
-#     # Check if the file has one of the allowed extensions
-#     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Define the set of allowed file extensions (e.g., 'mp4', 'avi', 'mov', etc.)
-# ALLOWED_EXTENSIONS = set(['mp4', 'avi', 'mov'])
-
 
 if __name__ == '__main__':
     port = 5001  # Default port

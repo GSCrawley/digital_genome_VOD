@@ -1,4 +1,4 @@
-# Cognitive Network Manager
+# Cognitive Network Manager (CNM)
 from flask import Flask, redirect, request, jsonify
 import requests
 import json
@@ -9,7 +9,7 @@ app = Flask(__name__)
 urls = {
     "video_client":{"video_client": ['http://localhost:5001', 'http://localhost:5002'], "video_server":'http://localhost:5005'},
     "UI":{"UI":'http://localhost:5000', "SWM": 'http://localhost:5003', "video_client": ['http://localhost:5001', 'http://localhost:5002']},
-    "SWM":{"SWM":'http://localhost:5003', 'video_client':['http://localhost:5001', 'http://localhost:5002']}
+    "SWM":{"SWM":'http://localhost:5003', 'video_client':['http://localhost:5001', 'http://localhost:5002'], "video_server":'http://localhost:5005'}
 }
 
 # This is the route the user first visits which sets up the connections
@@ -20,7 +20,7 @@ def make_connections():
     # Making SWM Connections to communicate
     data = urls["SWM"]
     response = requests.post(str(data["SWM"])+'/setup', json=data)
-    
+
     # Making UI connections to communicate to SWM
     data = urls["UI"]
     response = requests.post(str(data['UI'])+'/setup', json=data)
@@ -39,4 +39,3 @@ def make_connections():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5004)
-   
