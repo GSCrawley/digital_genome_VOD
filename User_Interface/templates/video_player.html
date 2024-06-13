@@ -68,14 +68,18 @@
                 <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
             </p>
         </video>
-        <div id="modal-header">
-            <span>Currently streaming from: <span id="current_server">{{ current_server_url }}</span></span>
-            <button id="close-button">&times;</button>
-        </div>
-        <div id="modal-content">
-            <div>Current elapsed time: <span id="elapsed_time">0</span> seconds</div>
-            <div id="log"></div>
-        </div>
+
+     <!-- The modal container -->
+<div id="modal">
+    <div id="modal-header">
+        <span>Currently streaming from: <span id="current_server"> {{ new_server_url }}</span></span>
+        <button id="close-button">&times;</button>
+    </div>
+    <div id="modal-content">
+        <div>Current elapsed time: <span id="elapsed_time">0</span> seconds</div>
+        <div id="log"></div>
+    </div>
+</div>
 
     <!-- Video.js JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.18.1/video.min.js"></script>
@@ -83,7 +87,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             var player = videojs('my-video');
-            var socket = io.connect('http://localhost:5001', 'http://localhost:5002'); // Adjust as necessary
+            var socket = io.connect(window.location.origin);            
             var currentServer = document.getElementById('current_server');
             var elapsedTimeElem = document.getElementById('elapsed_time');
             var logElem = document.getElementById('log');
@@ -111,8 +115,8 @@
 
             // Listen for server switch events
             socket.on('server_switch', function(data) {
-                currentServer.textContent = data.new_server;
-                addLog('Switched to ' + data.new_server);
+                currentServer.textContent = data.new_server_url;
+                addLog('Switched to ' + data.new_server_url);
             });
 
             function addLog(message) {

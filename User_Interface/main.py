@@ -2,13 +2,35 @@
 import requests
 import time
 from flask import Flask, render_template, Response, request, jsonify, redirect, url_for
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 url_dict = None  # Initialize url_dict globally
 socketio = SocketIO(app, cors_allowed_origins='*')
 primary_url = None
 current_url = None
+backup_url = None
+
+# def check_primary_availability():
+#     global primary_url, current_url
+#     test = requests.get(f"{url_dict['SWM']}/recover")
+#     try:
+#         response = requests.get(current_url)
+#         if response.status_code != 200:
+#             response = requests.get(f"{url_dict['SWM']}/recover")
+#             current_url = response.json()
+#         else:
+#             current_url = primary_url
+#     except requests.ConnectionError:
+#         response = requests.get(f"{url_dict['SWM']}/recover")
+#         current_url = response.json()
+#         # Sleep for some time before checking again
+#         time.sleep(1)
+
+
+# User_Interface/main.py
+
+# User_Interface/main.py
 
 def check_primary_availability():
     global primary_url, current_url
@@ -16,16 +38,26 @@ def check_primary_availability():
     try:
         response = requests.get(current_url)
         if response.status_code != 200:
+            # If the primary URL is down, get the new URL from the SWM
             response = requests.get(f"{url_dict['SWM']}/recover")
-            current_url = response.json()
+            new_url = response.json()  # Assume this returns the new URL
+            if new_url != current_url:
+                # Update the current_url and notify the clients
+                current_url = new_url
+                socketio.emit('server_switch', {'new_server_url': current_url})
         else:
+            # If the primary URL is up, ensure it is set as the current URL
             current_url = primary_url
     except requests.ConnectionError:
+        # If there is a connection error, get the new URL from the SWM
         response = requests.get(f"{url_dict['SWM']}/recover")
-        current_url = response.json()
+        new_url = response.json()  # Assume this returns the new URL
+        if new_url != current_url:
+            # Update the current_url and notify the clients
+            current_url = new_url
+            socketio.emit('server_switch', {'new_server_url': current_url})
         # Sleep for some time before checking again
         time.sleep(1)
-
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
