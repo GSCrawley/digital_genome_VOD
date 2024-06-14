@@ -1,0 +1,15 @@
+.env
+.DS_Store
+.myenv
+myenv
+env
+myenv/
+/myenv
+/bin
+.bin
+bin
+myenv/bin
+myenv/bin/
+include
+myenv/include
+Dockerfile

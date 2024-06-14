@@ -12,10 +12,12 @@ lock = threading.Lock()
 
 @app.route('/setup', methods=['POST'])
 def setup():
-    global video_clients, video_server
+    global video_clients, video_server, events, ui
     data = request.get_json()
     video_clients = data['video_client']
     video_server = data['video_server']
+    events = data['Events']
+    ui = data['UI']
     return "HI"
 
 @app.route('/recover', methods=['GET', 'POST'])
@@ -24,14 +26,17 @@ def recover():
         try:
             response = requests.get(url)
             if response.status_code == 200:
-                # TODO
-                # Here is the Event for when a switch happens
-                # EVENT
                 data = {
                     "video_client": video_clients,
-                    "video_server": video_server
+                    "video_server": video_server,
+                    "Events": events
                 }
-                # This reruns the setup when a new connection is established
+                event_data = {
+                    "video_client": url,
+                    "ui": ui
+                }
+                requests.post(f'{events}/client_connection_event', json=event_data)
+                print("DATA", events)
                 response = requests.get(f"{url}/setup", json=data)
                 return jsonify(url)
         except:
@@ -39,4 +44,3 @@ def recover():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003)
-

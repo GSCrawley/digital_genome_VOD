@@ -7,16 +7,19 @@ app = Flask(__name__)
 
 # These URLs will be populated by the APM upon deployment
 urls = {
-    "video_client":{"video_client": ['http://localhost:5001', 'http://localhost:5002'], "video_server":'http://localhost:5005'},
-    "UI":{"UI":'http://localhost:5000', "SWM": 'http://localhost:5003', "video_client": ['http://localhost:5001', 'http://localhost:5002']},
-    "SWM":{"SWM":'http://localhost:5003', 'video_client':['http://localhost:5001', 'http://localhost:5002'], "video_server":'http://localhost:5005'}
+    "video_client":{"video_client": ['http://localhost:5001', 'http://localhost:5002'], "Events":'http://localhost:5006', "video_server":'http://localhost:5005'},
+    "UI":{"UI":'http://localhost:5000', "SWM": 'http://localhost:5003', "video_client": ['http://localhost:5001', 'http://localhost:5002'], "Events":'http://localhost:5006'},
+    "SWM":{"SWM":'http://localhost:5003', "UI":'http://localhost:5000', 'video_client':['http://localhost:5001', 'http://localhost:5002'], "video_server":'http://localhost:5005', "Events":'http://localhost:5006'},
+    "Events":{"Events":'http://localhost:5006', "CNM":'http://localhost:5004', "UI":'http://localhost:5000', "SWM":'http://localhost:5003', "video_client": ['http://localhost:5001', 'http://localhost:5002'], "video_server":'http://localhost:5005'}
 }
 
 # This is the route the user first visits which sets up the connections
 # and reroutes thr user to the UI. This makes the communication for each 
 # node non-dependent on a hard coded URL.
-@app.route('/', methods=['GET', 'POST'])
+# @app.route('/', methods=['GET', 'POST'])
 def make_connections():
+    data = urls["Events"]
+    response = requests.post(str(data["Events"])+'/structural_setup_event', json=data)
     # Making SWM Connections to communicate
     data = urls["SWM"]
     response = requests.post(str(data["SWM"])+'/setup', json=data)
@@ -33,8 +36,13 @@ def make_connections():
         except:
             pass
 
+    # setup event
+
     # When finished redirect to the UI
-    return redirect(str(urls['UI']['UI']), code=302)
+    # return redirect(str(urls['UI']['UI']), code=302)
+    return('Hi')
+
+make_connections()
 
 
 if __name__ == '__main__':

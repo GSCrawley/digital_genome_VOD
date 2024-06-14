@@ -24,8 +24,15 @@ def setup():
     global url_dict
     data = request.get_json()
     url_dict = data
-    print("DATA", data)
-    return "hi"
+    # print("DATA", data)
+    base_url = request.host_url
+    # print("base:", base_url)
+    url_dict['base'] = base_url
+    print("URL DICT", url_dict)
+
+    # Create video_client Event
+    requests.post(f"{url_dict['Events']}/create_video_client_event", json=url_dict)
+    return("HI")
 
 @app.route('/videos', methods=['GET', 'POST'])
 def fetch_video_list():

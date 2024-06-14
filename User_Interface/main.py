@@ -11,30 +11,8 @@ primary_url = None
 current_url = None
 backup_url = None
 
-# def check_primary_availability():
-#     global primary_url, current_url
-#     test = requests.get(f"{url_dict['SWM']}/recover")
-#     try:
-#         response = requests.get(current_url)
-#         if response.status_code != 200:
-#             response = requests.get(f"{url_dict['SWM']}/recover")
-#             current_url = response.json()
-#         else:
-#             current_url = primary_url
-#     except requests.ConnectionError:
-#         response = requests.get(f"{url_dict['SWM']}/recover")
-#         current_url = response.json()
-#         # Sleep for some time before checking again
-#         time.sleep(1)
-
-
-# User_Interface/main.py
-
-# User_Interface/main.py
-
 def check_primary_availability():
     global primary_url, current_url
-    test = requests.get(f"{url_dict['SWM']}/recover")
     try:
         response = requests.get(current_url)
         if response.status_code != 200:
@@ -102,6 +80,11 @@ def watch_video(video_key):
     global current_url
     video_feed_url = url_for('video_feed', video_key=video_key)
     return render_template('video_player.html', video_url=video_feed_url, current_server_url=current_url)
+
+def video_selection_event(selected_video):
+    # send selected video event
+    response = requests.post(f"{url_dict['Events']}/video_selected_event", json=selected_video)
+    return response
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000)
