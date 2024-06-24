@@ -9,7 +9,6 @@ url_dict = None  # Initialize url_dict globally
 socketio = SocketIO(app, cors_allowed_origins='*')
 primary_url = None
 current_url = None
-backup_url = None
 
 def check_primary_availability():
     global primary_url, current_url
@@ -64,11 +63,16 @@ def video_feed(video_key):
     global current_url
     check_primary_availability()
     video_feed_url = f"{current_url}/video/{video_key}"
+    # range_header = request.headers.get('Range', None)
     try:
         response = requests.get(video_feed_url, stream=True)
         print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
             return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
+            # resp.headers['Accept-Ranges'] = 'bytes'
+            # resp.headers['Content-Range'] = response.headers.get('Content-Range', '*')
+            # return resp
+
     except Exception as e:  # Catch all exceptions
         print(f"An error occurred: {e}")
         return "An error occurred", 500  # Return a 500 error if an exception is raised
@@ -80,6 +84,7 @@ def watch_video(video_key):
     global current_url
     video_feed_url = url_for('video_feed', video_key=video_key)
     return render_template('video_player.html', video_url=video_feed_url, current_server_url=current_url)
+
 
 def video_selection_event(selected_video):
     # send selected video event
