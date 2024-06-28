@@ -94,19 +94,24 @@
             var lastUpdateTime = player.currentTime();
 
             // Handlers for video playback events
+            var player = videojs('my-video');
+            var socket = io.connect(window.location.origin);
+            var elapsedTimeElem = document.getElementById('elapsed_time');
+            var lastUpdateTime = player.currentTime();
+            
             player.on('play', function() {
                 socket.emit('play', { time: player.currentTime() });
                 addLog('Play');
             });
-
+            
             player.on('pause', function() {
                 socket.emit('pause', { time: player.currentTime() });
                 addLog('Pause');
             });
-
+            
             player.on('timeupdate', function() {
                 var now = Date.now();
-                elapsedTimeElem.textContent = Math.floor(player.currentTime());
+                elapsedTimeElem.textContent = player.currentTime().toFixed(2);
                 if (now - lastUpdateTime > 1000) {
                     socket.emit('timeupdate', { time: player.currentTime() });
                     lastUpdateTime = now;
