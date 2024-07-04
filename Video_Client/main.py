@@ -55,7 +55,7 @@ def stream_video(video_key):
     # Send video selection event
     requests.post(f"{url_dict['Events']}/video_selected_event", json={'video_key': video_key})
     
-    data = video_key
+    data = {'video_key': video_key}
 
     response = requests.post(f"{url_dict['video_server']}/presigned", json=data)
     if response.status_code == 200:

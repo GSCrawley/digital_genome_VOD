@@ -18,12 +18,11 @@ conn.apiToken = conn.getToken(secret)
 # Event for user picking a video
 def video_selected_event(data):
     event_id = f"E{str(uuid.uuid4())[:8]}"
-    # video_id = f"V{str(uuid.uuid4())[:8]}"
-    video_id = data
+    video_id = data['video_key']
     user_id = "U12345678"
     # upsert Video vertex
     attributes = {
-        "title": data
+        "title": video_id
     }
     conn.upsertVertex("Video", video_id, attributes)
     # upsert User vertex
