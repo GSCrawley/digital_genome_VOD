@@ -53,9 +53,9 @@ def get_thumbnail(thumbnail_key):
 def stream_video(video_key):
     # Request presigned URL from Video Server
     data = video_key
-    # TODO:
-    # Here is the event for when a video is selected
-    # EVENT!!!
+    
+    # Send video selection event
+    requests.post(f"{url_dict['Events']}/video_selected_event", json={'video_key': video_key})
 
     response = requests.post(f"{url_dict['video_server']}/presigned", json=data)
     if response.status_code == 200:
