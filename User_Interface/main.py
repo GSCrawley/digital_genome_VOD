@@ -56,6 +56,16 @@ def index():
 
     return render_template('video_list.html', videos=videos_with_thumbnails)
 
+@app.route('/thumbnail/<path:thumbnail_key>')
+def get_thumbnail(thumbnail_key):
+    global current_url
+    response = requests.get(f"{current_url}/thumbnail/{thumbnail_key}")
+    if response.status_code == 200:
+        presigned_url = response.json().get('presigned_url')
+        return redirect(presigned_url)
+    else:
+        return "Thumbnail not found", 404
+
 @app.route('/select_video', methods=['POST'])
 def select_video():
     selected_video = request.form['video']
