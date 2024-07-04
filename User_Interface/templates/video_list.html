@@ -72,11 +72,9 @@ h1 {
         {% for video in videos %}
             <li class="video-item">
                 <form action="/select_video" method="post">
-                    <input type="hidden" name="video" value="{{ video.name }}">
-                    <button type="submit" class="video-button" data-video="{{ video.name }}">
-                        {% if video.thumbnail %}
-                        <img src="{{ current_url }}/thumbnails/{{ video.thumbnail }}" alt="Thumbnail" class="thumbnail">
-                        {% endif %}
+                    <input type="hidden" name="video" value="{{ video.video }}">
+                    <button type="submit" class="video-button" data-video="{{ video.video }}">
+                        <img src="{{ url_for('get_thumbnail', thumbnail_key=video.thumbnail) }}" alt="Thumbnail" class="thumbnail">
                         <span>{{ video.name }}</span>
                     </button>
                 </form>

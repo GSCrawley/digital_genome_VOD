@@ -38,7 +38,16 @@ def setup():
 def fetch_video_list():
     response = requests.get(f"{url_dict['video_server']}/videos")
     videos = response.json() if response.status_code == 200 else []
-    return videos
+    return jsonify(videos)
+
+@app.route('/thumbnail/<path:thumbnail_key>')
+def get_thumbnail(thumbnail_key):
+    response = requests.get(f"{url_dict['video_server']}/thumbnail/{thumbnail_key}")
+    if response.status_code == 200:
+        presigned_url = response.json().get('presigned_url')
+        return jsonify({'presigned_url': presigned_url})
+    else:
+        return jsonify({'error': 'Failed to retrieve thumbnail'}), response.status_code
 
 @app.route('/video/<video_key>')
 def stream_video(video_key):

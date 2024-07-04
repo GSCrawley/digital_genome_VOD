@@ -49,7 +49,15 @@ def fetch_video_list(bucket_name):
     video_list = []
 
     for obj in response.get('Contents', []):
-        video_list.append(obj['Key'])
+        key = obj['Key']
+        if key.endswith('.mp4'):
+            video_name = key[:-4]  # Remove .mp4 extension
+            thumbnail = f"{video_name}_thumbnail.png"
+            video_list.append({
+                'name': video_name,
+                'video': key,
+                'thumbnail': thumbnail
+            })
 
     print(video_list)
     return video_list
@@ -58,6 +66,25 @@ def fetch_video_list(bucket_name):
 def list_videos():
     videos = fetch_video_list(bucket_name)
     return jsonify(videos)
+
+@app.route('/thumbnail/<path:thumbnail_key>')
+def get_thumbnail(thumbnail_key):
+    try:
+        s3_client = boto3.client('s3',
+                                 aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                                 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+                                 aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
+                                 region_name=os.getenv('AWS_REGION'))
+
+        presigned_url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name, 'Key': thumbnail_key},
+            ExpiresIn=3600
+        )
+        return jsonify({'presigned_url': presigned_url})
+    except Exception as e:
+        print(f"Error generating presigned URL for thumbnail: {e}")
+        return jsonify({'error': 'Failed to generate presigned URL for thumbnail'}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005)
