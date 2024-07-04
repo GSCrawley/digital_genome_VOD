@@ -110,11 +110,11 @@
             });
             
             player.on('timeupdate', function() {
-                var now = Date.now();
-                elapsedTimeElem.textContent = player.currentTime().toFixed(2);
-                if (now - lastUpdateTime > 1000) {
-                    socket.emit('timeupdate', { time: player.currentTime() });
-                    lastUpdateTime = now;
+                var currentTime = player.currentTime();
+                elapsedTimeElem.textContent = currentTime.toFixed(2);
+                if (currentTime - lastUpdateTime >= 1) {
+                    socket.emit('timeupdate', { time: currentTime });
+                    lastUpdateTime = currentTime;
                 }
             });
 
