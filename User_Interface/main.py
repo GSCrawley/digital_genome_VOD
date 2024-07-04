@@ -64,7 +64,8 @@ def get_thumbnail(thumbnail_key):
         presigned_url = response.json().get('presigned_url')
         return redirect(presigned_url)
     else:
-        return "Thumbnail not found", 404
+        # If thumbnail is not found, return the default thumbnail
+        return send_file('static/default_thumbnail.png', mimetype='image/png')
 
 @app.route('/select_video', methods=['POST'])
 def select_video():
