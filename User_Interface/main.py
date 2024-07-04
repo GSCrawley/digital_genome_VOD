@@ -77,21 +77,19 @@ def video_feed(video_key):
     global current_url
     check_primary_availability()
     video_feed_url = f"{current_url}/video/{video_key}"
-    # range_header = request.headers.get('Range', None)
     try:
         response = requests.get(video_feed_url, stream=True)
         print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
-            return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
-            # resp.headers['Accept-Ranges'] = 'bytes'
-            # resp.headers['Content-Range'] = response.headers.get('Content-Range', '*')
-            # return resp
-
-    except Exception as e:  # Catch all exceptions
+            def generate():
+                for chunk in response.iter_content(chunk_size=1024):
+                    yield chunk
+            return Response(generate(), content_type='video/mp4')
+        else:
+            return jsonify({'error': 'Failed to retrieve video', 'status': response.status_code}), response.status_code
+    except Exception as e:
         print(f"An error occurred: {e}")
-        return "An error occurred", 500  # Return a 500 error if an exception is raised
-    
-    # return jsonify({'error': 'Failed to retrieve video'}), 500
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
 @app.route('/watch/<video_key>')
 def watch_video(video_key):

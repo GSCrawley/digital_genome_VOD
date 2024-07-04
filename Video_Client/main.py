@@ -59,17 +59,18 @@ def stream_video(video_key):
 
     response = requests.post(f"{url_dict['video_server']}/presigned", json=data)
     if response.status_code == 200:
-        # TODO:
-        # Try to find a way to get the video from the video_server rather than directly from the s3!!!
         presigned_url = response.json().get('presigned_url')
-        # Proxy the video content from presigned URL to the client
-        def generate():
-            with requests.get(presigned_url, stream=True) as r:
-                for chunk in r.iter_content(chunk_size=1024):
-                    yield chunk
-        return Response(generate(), mimetype='video/mp4')
+        if presigned_url:
+            # Proxy the video content from presigned URL to the client
+            def generate():
+                with requests.get(presigned_url, stream=True) as r:
+                    for chunk in r.iter_content(chunk_size=1024):
+                        yield chunk
+            return Response(generate(), mimetype='video/mp4')
+        else:
+            return jsonify({'error': 'No presigned URL received'}), 500
     else:
-        return jsonify({'error': 'Failed to retrieve video'}), response.status_code
+        return jsonify({'error': 'Failed to retrieve video', 'status': response.status_code}), response.status_code
 
 if __name__ == '__main__':
     port = 5001  # Default port
