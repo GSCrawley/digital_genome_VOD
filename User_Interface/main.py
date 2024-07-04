@@ -51,12 +51,9 @@ def index():
     response = requests.get(f"{current_url}/videos")
     items = response.json() if response.status_code == 200 else []
 
-     # Separate videos and thumbnails
-    videos = [item for item in items if not item.endswith('_thumbnail.png')]
-    thumbnails = {item.replace('_thumbnail.png', ''): item for item in items if item.endswith('_thumbnail.png')}
-    
-     # Pair each video with its thumbnail
-    videos_with_thumbnails = [{'name': video, 'thumbnail': thumbnails.get(video, '')} for video in videos]
+    # Items are already in the correct format, no need for separation
+    videos_with_thumbnails = items
+
     return render_template('video_list.html', videos=videos_with_thumbnails)
 
 @app.route('/select_video', methods=['POST'])
