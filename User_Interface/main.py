@@ -52,6 +52,8 @@ def index():
         response = requests.get(f"{current_url}/videos", timeout=5)
         if response.status_code == 200:
             videos_with_thumbnails = response.json()
+            for video in videos_with_thumbnails:
+                video['thumbnail'] = url_for('get_thumbnail', thumbnail_key=video['thumbnail'])
         else:
             videos_with_thumbnails = []
             app.logger.error(f"Failed to fetch videos. Status code: {response.status_code}")
@@ -64,12 +66,21 @@ def index():
 @app.route('/thumbnail/<path:thumbnail_key>')
 def get_thumbnail(thumbnail_key):
     global current_url
-    response = requests.get(f"{current_url}/thumbnail/{thumbnail_key}")
-    if response.status_code == 200:
-        presigned_url = response.json().get('presigned_url')
-        return redirect(presigned_url)
-    else:
-        return jsonify({'error': 'Thumbnail not found'}), 404
+    try:
+        response = requests.get(f"{current_url}/thumbnail/{thumbnail_key}", timeout=5)
+        if response.status_code == 200:
+            presigned_url = response.json().get('presigned_url')
+            if presigned_url:
+                return redirect(presigned_url)
+            else:
+                app.logger.warning(f"No presigned URL for thumbnail: {thumbnail_key}")
+                return redirect(url_for('static', filename='default_thumbnail.png'))
+        else:
+            app.logger.error(f"Failed to retrieve thumbnail: {thumbnail_key}. Status code: {response.status_code}")
+            return redirect(url_for('static', filename='default_thumbnail.png'))
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Error retrieving thumbnail: {thumbnail_key}. Error: {str(e)}")
+        return redirect(url_for('static', filename='default_thumbnail.png'))
 
 @app.route('/select_video', methods=['POST'])
 def select_video():
