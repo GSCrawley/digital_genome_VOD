@@ -94,27 +94,33 @@ def video_feed(video_key):
     check_primary_availability()
     video_feed_url = f"{current_url}/presigned"
     try:
+        app.logger.info(f"Requesting presigned URL for video: {video_key}")
+        app.logger.info(f"Sending request to: {video_feed_url}")
         response = requests.post(video_feed_url, json=video_key, timeout=10)
-        print("NOW STREAMING FROM:", current_url)
+        app.logger.info(f"NOW STREAMING FROM: {current_url}")
+        app.logger.info(f"Response status code: {response.status_code}")
+        app.logger.info(f"Response content: {response.text}")
+        
         if response.status_code == 200:
             presigned_url = response.json().get('presigned_url')
             if presigned_url:
+                app.logger.info(f"Presigned URL retrieved successfully: {presigned_url}")
                 return redirect(presigned_url)
             else:
-                error_message = "Failed to retrieve presigned URL"
-                print(error_message)
+                error_message = "Failed to retrieve presigned URL from response"
+                app.logger.error(error_message)
                 return Response(error_message, status=500, content_type='text/plain')
         else:
             error_message = f"Failed to retrieve presigned URL. Status code: {response.status_code}"
-            print(error_message)
+            app.logger.error(error_message)
             return Response(error_message, status=response.status_code, content_type='text/plain')
     except requests.exceptions.RequestException as e:
         error_message = f"Connection error occurred: {e}"
-        print(error_message)
+        app.logger.error(error_message)
         return Response(error_message, status=500, content_type='text/plain')
     except Exception as e:
         error_message = f"An unexpected error occurred: {e}"
-        print(error_message)
+        app.logger.error(error_message)
         return Response(error_message, status=500, content_type='text/plain')
 
 @app.after_request

@@ -17,6 +17,7 @@ bucket_name = os.getenv('S3_BUCKET_NAME')
 def generate_presigned_url():
     data = request.get_json()
     video_key = data
+    app.logger.info(f"Received request for presigned URL for video: {video_key}")
     try:
         s3_client = boto3.client('s3',
                                  aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -24,21 +25,23 @@ def generate_presigned_url():
                                  aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
                                  region_name=os.getenv('AWS_REGION'))
 
+        app.logger.info(f"Generating presigned URL for bucket: {bucket_name}, key: {video_key}")
         presigned_url = s3_client.generate_presigned_url(
             'get_object',
             Params={'Bucket': bucket_name, 'Key': video_key},
             ExpiresIn=14400
         )
+        app.logger.info(f"Presigned URL generated successfully: {presigned_url}")
         return jsonify({'presigned_url': presigned_url})
     except NoCredentialsError:
-        print("No AWS credentials found.")
+        app.logger.error("No AWS credentials found.")
         return jsonify({'error': 'No AWS credentials found'}), 500
     except ClientError as e:
-        print(f"Client error: {e}")
-        return jsonify({'error': 'Client error occurred'}), 500
+        app.logger.error(f"Client error: {e}")
+        return jsonify({'error': str(e)}), 500
     except Exception as e:
-        print(f"Unexpected error: {e}")
-        return jsonify({'error': 'Unexpected error occurred'}), 500
+        app.logger.error(f"Unexpected error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 def fetch_video_list(bucket_name):
     s3 = boto3.client('s3',
