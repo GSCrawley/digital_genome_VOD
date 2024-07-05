@@ -74,7 +74,7 @@ h1 {
                 <form action="/select_video" method="post">
                     <input type="hidden" name="video" value="{{ video.video }}">
                     <button type="submit" class="video-button" data-video="{{ video.video }}">
-                        <img src="{{ url_for('get_thumbnail', thumbnail_key=video.thumbnail).replace('/thumbnail/', '/') }}" alt="Thumbnail" class="thumbnail">
+                        <img src="{{ url_for('get_thumbnail', thumbnail_key=video.thumbnail) }}" alt="Thumbnail" class="thumbnail">
                         <span>{{ video.name }}</span>
                     </button>
                 </form>
