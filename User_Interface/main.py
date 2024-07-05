@@ -86,27 +86,28 @@ def select_video():
 @app.route('/video_feed/<video_key>', methods=['GET'])
 def video_feed(video_key):
     global current_url
-    video_feed_url = f"{current_url}/presigned"
+    check_primary_availability()
+    video_feed_url = f"{current_url}/video/{video_key}"
     try:
-        response = requests.post(video_feed_url, json=video_key, timeout=10)
+        response = requests.get(video_feed_url, stream=True)
+        print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
-            presigned_url = response.json().get('presigned_url')
-            if presigned_url:
-                return redirect(presigned_url)
-        return Response("Failed to retrieve presigned URL", status=500, content_type='text/plain')
-    except Exception as e:
-        return Response(f"An error occurred: {str(e)}", status=500, content_type='text/plain')
+            return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
 
-@app.after_request
-def add_header(response):
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    return response
+    except Exception as e:  # Catch all exceptions
+        print(f"An error occurred: {e}")
+        return "An error occurred", 500  # Return a 500 error if an exception is raised
+
+# @app.after_request
+# def add_header(response):
+#     response.headers['X-Content-Type-Options'] = 'nosniff'
+#     return response
 
 @app.route('/watch/<video_key>')
 def watch_video(video_key):
     global current_url
     video_feed_url = url_for('video_feed', video_key=video_key)
-    return render_template('video_player.html', video_key=video_key, video_url=video_feed_url, current_server_url=current_url)
+    return render_template('video_player.html', video_url=video_feed_url, current_server_url=current_url)
 
 
 def video_selection_event(selected_video):
