@@ -92,22 +92,20 @@ def select_video():
 def video_feed(video_key):
     global current_url
     check_primary_availability()
-    video_feed_url = f"{current_url}/video/{video_key}"
+    video_feed_url = f"{current_url}/presigned"
     try:
-        response = requests.get(video_feed_url, stream=True, timeout=10)
+        response = requests.post(video_feed_url, json=video_key, timeout=10)
         print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
-            def generate():
-                try:
-                    for chunk in response.iter_content(chunk_size=1024):
-                        if chunk:
-                            yield chunk
-                except requests.exceptions.RequestException as e:
-                    print(f"Error streaming video: {e}")
-                    yield b''  # Yield empty byte string to prevent stream interruption
-            return Response(generate(), content_type=response.headers.get('content-type', 'video/mp4'))
+            presigned_url = response.json().get('presigned_url')
+            if presigned_url:
+                return redirect(presigned_url)
+            else:
+                error_message = "Failed to retrieve presigned URL"
+                print(error_message)
+                return Response(error_message, status=500, content_type='text/plain')
         else:
-            error_message = f"Failed to retrieve video. Status code: {response.status_code}"
+            error_message = f"Failed to retrieve presigned URL. Status code: {response.status_code}"
             print(error_message)
             return Response(error_message, status=response.status_code, content_type='text/plain')
     except requests.exceptions.RequestException as e:
@@ -128,7 +126,7 @@ def add_header(response):
 def watch_video(video_key):
     global current_url
     video_feed_url = url_for('video_feed', video_key=video_key)
-    return render_template('video_player.html', video_url=video_feed_url, current_server_url=current_url)
+    return render_template('video_player.html', video_key=video_key, video_url=video_feed_url, current_server_url=current_url)
 
 
 def video_selection_event(selected_video):
