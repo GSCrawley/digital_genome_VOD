@@ -138,6 +138,31 @@
                 }
                 addLog(errorMessage);
                 console.error(errorMessage);
+                console.error('Detailed error object:', error);
+                
+                // Display error message to the user
+                var errorDisplay = document.createElement('div');
+                errorDisplay.className = 'vjs-error-display';
+                errorDisplay.style.display = 'block';
+                errorDisplay.innerHTML = `
+                    <div class="vjs-modal-dialog">
+                        <div class="vjs-modal-dialog-content">
+                            ${errorMessage}<br>
+                            Please try refreshing the page or contact support if the issue persists.
+                        </div>
+                    </div>
+                `;
+                player.el().appendChild(errorDisplay);
+            });
+
+            // Add event listener for loadedmetadata
+            player.on('loadedmetadata', function() {
+                addLog('Video metadata loaded successfully');
+            });
+
+            // Add event listener for loadstart
+            player.on('loadstart', function() {
+                addLog('Started loading video');
             });
 
             // Listen for server switch events

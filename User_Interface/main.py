@@ -108,6 +108,11 @@ def video_feed(video_key):
         print(error_message)
         return Response(error_message, status=500, content_type='text/plain')
 
+@app.after_request
+def add_header(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
 @app.route('/watch/<video_key>')
 def watch_video(video_key):
     global current_url
