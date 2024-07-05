@@ -87,12 +87,17 @@ def select_video():
 def video_feed(video_key):
     global current_url
     check_primary_availability()
-    video_feed_url = f"{current_url}/video/{video_key}"
+    video_feed_url = f"{current_url}/presigned"
     try:
-        response = requests.get(video_feed_url, stream=True)
+        response = requests.post(video_feed_url, json={'video_key': video_key})
         print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
-            return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
+            presigned_url = response.json().get('presigned_url')
+            if presigned_url:
+                return redirect(presigned_url)
+            else:
+                print("No presigned URL received")
+                return "Error: No presigned URL received", 500
         else:
             print(f"Error retrieving video. Status code: {response.status_code}")
             return f"Error retrieving video. Status code: {response.status_code}", response.status_code

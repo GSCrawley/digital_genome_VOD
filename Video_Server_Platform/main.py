@@ -16,8 +16,10 @@ bucket_name = os.getenv('S3_BUCKET_NAME')
 @app.route('/presigned', methods=['POST'])
 def generate_presigned_url():
     data = request.get_json()
-    video_key = data
+    video_key = data.get('video_key')  # Extract video_key from the JSON data
     app.logger.info(f"Received request for presigned URL for video: {video_key}")
+    if not video_key:
+        return jsonify({'error': 'No video key provided'}), 400
     try:
         s3_client = boto3.client('s3',
                                  aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
