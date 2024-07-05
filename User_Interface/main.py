@@ -83,7 +83,7 @@ def select_video():
     # Redirect to video feed route with selected video key
     return redirect(url_for('watch_video', video_key=selected_video))
 
-@app.route('/video_feed/<video_key>', methods=['GET'])
+@app.route('/video_feed/<path:video_key>', methods=['GET'])
 def video_feed(video_key):
     global current_url
     check_primary_availability()
@@ -93,21 +93,23 @@ def video_feed(video_key):
         print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
             return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
-
+        else:
+            print(f"Error retrieving video. Status code: {response.status_code}")
+            return f"Error retrieving video. Status code: {response.status_code}", response.status_code
     except Exception as e:  # Catch all exceptions
         print(f"An error occurred: {e}")
-        return "An error occurred", 500  # Return a 500 error if an exception is raised
+        return f"An error occurred: {str(e)}", 500
 
 # @app.after_request
 # def add_header(response):
 #     response.headers['X-Content-Type-Options'] = 'nosniff'
 #     return response
 
-@app.route('/watch/<video_key>')
+@app.route('/watch/<path:video_key>')
 def watch_video(video_key):
     global current_url
     video_feed_url = url_for('video_feed', video_key=video_key)
-    return render_template('video_player.html', video_url=video_feed_url, current_server_url=current_url)
+    return render_template('video_player.html', video_key=video_key, current_server_url=current_url)
 
 
 def video_selection_event(selected_video):
