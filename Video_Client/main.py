@@ -7,6 +7,7 @@ import requests
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 import os
+import json
 
 load_dotenv()  
 
@@ -58,17 +59,25 @@ def stream_video(video_key):
     data = {'video_key': video_key}
 
     response = requests.post(f"{url_dict['video_server']}/presigned", json=data)
+    print(f"Response status code: {response.status_code}")
+    print(f"Response content: {response.text}")
+    
     if response.status_code == 200:
-        presigned_url = response.json().get('presigned_url')
-        if presigned_url:
-            # Proxy the video content from presigned URL to the client
-            def generate():
-                with requests.get(presigned_url, stream=True) as r:
-                    for chunk in r.iter_content(chunk_size=1024):
-                        yield chunk
-            return Response(generate(), mimetype='video/mp4')
-        else:
-            return jsonify({'error': 'No presigned URL received'}), 500
+        try:
+            response_json = response.json()
+            presigned_url = response_json.get('presigned_url')
+            if presigned_url:
+                # Proxy the video content from presigned URL to the client
+                def generate():
+                    with requests.get(presigned_url, stream=True) as r:
+                        for chunk in r.iter_content(chunk_size=1024):
+                            yield chunk
+                return Response(generate(), mimetype='video/mp4')
+            else:
+                return jsonify({'error': 'No presigned URL received'}), 500
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            return jsonify({'error': 'Invalid JSON response from server'}), 500
     else:
         return jsonify({'error': 'Failed to retrieve video', 'status': response.status_code}), response.status_code
 
