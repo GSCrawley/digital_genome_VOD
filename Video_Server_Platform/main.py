@@ -17,6 +17,7 @@ bucket_name = os.getenv('S3_BUCKET_NAME')
 def generate_presigned_url():
     data = request.get_json()
     video_key = data
+    quality = request.args.get('quality', 'medium')  # Default to medium quality
     try:
         s3_client = boto3.client('s3',
                                  aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -24,21 +25,25 @@ def generate_presigned_url():
                                  aws_session_token=os.getenv('AWS_SESSION_TOKEN'),
                                  region_name=os.getenv('AWS_REGION'))
 
+        # Adjust the video key based on the requested quality
+        quality_suffix = f"_{quality}"
+        adjusted_video_key = video_key.rsplit('.', 1)[0] + quality_suffix + '.' + video_key.rsplit('.', 1)[1]
+
         presigned_url = s3_client.generate_presigned_url(
             'get_object',
-            Params={'Bucket': bucket_name, 'Key': video_key},
+            Params={'Bucket': bucket_name, 'Key': adjusted_video_key},
             ExpiresIn=14400
         )
         return jsonify({'presigned_url': presigned_url})
     except NoCredentialsError:
         print("No AWS credentials found.")
-        return "Err"
+        return jsonify({'error': 'No AWS credentials found'}), 500
     except ClientError as e:
         print(f"Client error: {e}")
-        return "err"
+        return jsonify({'error': 'Client error occurred'}), 500
     except Exception as e:
         print(f"Unexpected error: {e}")
-        return "ERR"
+        return jsonify({'error': 'Unexpected error occurred'}), 500
 
 def fetch_video_list(bucket_name):
     s3 = boto3.client('s3',
@@ -85,6 +90,23 @@ def get_thumbnail(thumbnail_key):
     except Exception as e:
         print(f"Error generating presigned URL for thumbnail: {e}")
         return jsonify({'error': 'Failed to generate presigned URL for thumbnail'}), 500
+
+@app.route('/manifest/<path:video_key>')
+def get_manifest(video_key):
+    try:
+        manifest = {
+            'video': video_key,
+            'qualities': ['low', 'medium', 'high'],
+            'urls': {
+                'low': url_for('generate_presigned_url', _external=True, quality='low'),
+                'medium': url_for('generate_presigned_url', _external=True, quality='medium'),
+                'high': url_for('generate_presigned_url', _external=True, quality='high')
+            }
+        }
+        return jsonify(manifest)
+    except Exception as e:
+        print(f"Error generating manifest: {e}")
+        return jsonify({'error': 'Failed to generate manifest'}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005)
