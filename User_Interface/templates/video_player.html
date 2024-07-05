@@ -148,11 +148,24 @@
                     <div class="vjs-modal-dialog">
                         <div class="vjs-modal-dialog-content">
                             ${errorMessage}<br>
+                            Error details: ${error.message}<br>
                             Please try refreshing the page or contact support if the issue persists.
                         </div>
                     </div>
                 `;
                 player.el().appendChild(errorDisplay);
+
+                // Attempt to reload the video after a short delay
+                setTimeout(function() {
+                    player.src({ type: 'video/mp4', src: '{{ video_url }}' });
+                    player.load();
+                    addLog('Attempting to reload the video');
+                }, 5000);
+            });
+
+            // Add event listener for loadeddata
+            player.on('loadeddata', function() {
+                addLog('Video data loaded successfully');
             });
 
             // Add event listener for loadedmetadata
