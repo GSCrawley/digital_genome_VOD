@@ -83,18 +83,27 @@ def video_feed(video_key):
     check_primary_availability()
     video_feed_url = f"{current_url}/video/{video_key}"
     try:
-        response = requests.get(video_feed_url, stream=True)
+        response = requests.get(video_feed_url, stream=True, timeout=10)
         print("NOW STREAMING FROM:", current_url)
         if response.status_code == 200:
             def generate():
-                for chunk in response.iter_content(chunk_size=1024):
-                    yield chunk
+                try:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        if chunk:
+                            yield chunk
+                except requests.exceptions.RequestException as e:
+                    print(f"Error streaming video: {e}")
+                    yield b''  # Yield empty byte string to prevent stream interruption
             return Response(generate(), content_type='video/mp4')
         else:
+            print(f"Failed to retrieve video. Status code: {response.status_code}")
             return jsonify({'error': 'Failed to retrieve video', 'status': response.status_code}), response.status_code
+    except requests.exceptions.RequestException as e:
+        print(f"Connection error occurred: {e}")
+        return jsonify({'error': 'Connection error occurred', 'details': str(e)}), 500
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+        print(f"An unexpected error occurred: {e}")
+        return jsonify({'error': 'An unexpected error occurred', 'details': str(e)}), 500
 
 @app.route('/watch/<video_key>')
 def watch_video(video_key):

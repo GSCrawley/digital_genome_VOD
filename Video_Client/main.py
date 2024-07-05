@@ -69,9 +69,15 @@ def stream_video(video_key):
             if presigned_url:
                 # Proxy the video content from presigned URL to the client
                 def generate():
-                    with requests.get(presigned_url, stream=True) as r:
-                        for chunk in r.iter_content(chunk_size=1024):
-                            yield chunk
+                    try:
+                        with requests.get(presigned_url, stream=True) as r:
+                            r.raise_for_status()
+                            for chunk in r.iter_content(chunk_size=1024):
+                                if chunk:
+                                    yield chunk
+                    except requests.exceptions.RequestException as e:
+                        print(f"Error streaming video: {e}")
+                        yield b''  # Yield empty byte string to prevent stream interruption
                 return Response(generate(), mimetype='video/mp4')
             else:
                 return jsonify({'error': 'No presigned URL received'}), 500
