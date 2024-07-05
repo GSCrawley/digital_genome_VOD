@@ -50,8 +50,8 @@ def fetch_video_list(bucket_name):
 
     for obj in response.get('Contents', []):
         key = obj['Key']
-        if key.endswith(('.mp4', '.m4v')):
-            video_name = key.rsplit('.', 1)[0]  # Remove file extension
+        if key.endswith('.mp4'):
+            video_name = key[:-4]  # Remove .mp4 extension
             thumbnail = f"{video_name}_thumbnail.png"
             video_list.append({
                 'name': video_name,
