@@ -94,16 +94,19 @@ def video_feed(video_key):
                 except requests.exceptions.RequestException as e:
                     print(f"Error streaming video: {e}")
                     yield b''  # Yield empty byte string to prevent stream interruption
-            return Response(generate(), content_type='video/mp4')
+            return Response(generate(), content_type=response.headers.get('content-type', 'video/mp4'))
         else:
-            print(f"Failed to retrieve video. Status code: {response.status_code}")
-            return jsonify({'error': 'Failed to retrieve video', 'status': response.status_code}), response.status_code
+            error_message = f"Failed to retrieve video. Status code: {response.status_code}"
+            print(error_message)
+            return Response(error_message, status=response.status_code, content_type='text/plain')
     except requests.exceptions.RequestException as e:
-        print(f"Connection error occurred: {e}")
-        return jsonify({'error': 'Connection error occurred', 'details': str(e)}), 500
+        error_message = f"Connection error occurred: {e}"
+        print(error_message)
+        return Response(error_message, status=500, content_type='text/plain')
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return jsonify({'error': 'An unexpected error occurred', 'details': str(e)}), 500
+        error_message = f"An unexpected error occurred: {e}"
+        print(error_message)
+        return Response(error_message, status=500, content_type='text/plain')
 
 @app.route('/watch/<video_key>')
 def watch_video(video_key):

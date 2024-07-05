@@ -86,7 +86,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            var player = videojs('my-video');
+            var player = videojs('my-video', {
+                errorDisplay: false
+            });
             var socket = io.connect(window.location.origin);            
             var currentServer = document.getElementById('current_server');
             var elapsedTimeElem = document.getElementById('elapsed_time');
@@ -94,11 +96,6 @@
             var lastUpdateTime = player.currentTime();
 
             // Handlers for video playback events
-            var player = videojs('my-video');
-            var socket = io.connect(window.location.origin);
-            var elapsedTimeElem = document.getElementById('elapsed_time');
-            var lastUpdateTime = player.currentTime();
-            
             player.on('play', function() {
                 socket.emit('play', { time: player.currentTime() });
                 addLog('Play');
@@ -116,6 +113,31 @@
                     socket.emit('timeupdate', { time: currentTime });
                     lastUpdateTime = currentTime;
                 }
+            });
+
+            // Error handling
+            player.on('error', function() {
+                var error = player.error();
+                var errorMessage = 'An error occurred: ';
+                switch (error.code) {
+                    case 1:
+                        errorMessage += 'MEDIA_ERR_ABORTED - The video playback was aborted.';
+                        break;
+                    case 2:
+                        errorMessage += 'MEDIA_ERR_NETWORK - A network error caused the video download to fail.';
+                        break;
+                    case 3:
+                        errorMessage += 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support.';
+                        break;
+                    case 4:
+                        errorMessage += 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported.';
+                        break;
+                    default:
+                        errorMessage += 'An unknown error occurred.';
+                        break;
+                }
+                addLog(errorMessage);
+                console.error(errorMessage);
             });
 
             // Listen for server switch events
