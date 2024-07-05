@@ -62,7 +62,7 @@
 </head>
 <body>
     <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'> 
-        <source src="{{ url_for('video_feed', video_key=video_key) }}" type="video/mp4">
+        <source src="{{ video_url }}" type="video/mp4">
         <p class="vjs-no-js">
             To view this video please enable JavaScript, and consider upgrading to a web browser that
             <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
