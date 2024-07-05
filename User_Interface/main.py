@@ -98,6 +98,9 @@ def video_feed(video_key):
             else:
                 print("No presigned URL received")
                 return "Error: No presigned URL received", 500
+        elif response.status_code == 404:
+            print(f"Video not found: {video_key}")
+            return f"Video not found: {video_key}", 404
         else:
             print(f"Error retrieving video. Status code: {response.status_code}")
             return f"Error retrieving video. Status code: {response.status_code}", response.status_code
