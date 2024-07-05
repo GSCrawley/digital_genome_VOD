@@ -48,13 +48,18 @@ def setup():
 @app.route('/')
 def index():
     global current_url
-    response = requests.get(f"{current_url}/videos")
-    items = response.json() if response.status_code == 200 else []
+    try:
+        response = requests.get(f"{current_url}/videos", timeout=5)
+        if response.status_code == 200:
+            videos_with_thumbnails = response.json()
+        else:
+            videos_with_thumbnails = []
+            app.logger.error(f"Failed to fetch videos. Status code: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        videos_with_thumbnails = []
+        app.logger.error(f"Error connecting to video server: {str(e)}")
 
-    # Items are already in the correct format, no need for separation
-    videos_with_thumbnails = items
-
-    return render_template('video_list.html', videos=videos_with_thumbnails)
+    return render_template('video_list.html', videos=videos_with_thumbnails, error_message=None if videos_with_thumbnails else "Unable to fetch videos. Please try again later.")
 
 @app.route('/thumbnail/<path:thumbnail_key>')
 def get_thumbnail(thumbnail_key):

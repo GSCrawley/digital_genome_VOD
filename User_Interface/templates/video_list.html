@@ -68,18 +68,24 @@ h1 {
 </head>
 <body>
     <h1>Video List</h1>
-    <ul class="video-list">
-        {% for video in videos %}
-            <li class="video-item">
-                <form action="/select_video" method="post">
-                    <input type="hidden" name="video" value="{{ video.video }}">
-                    <button type="submit" class="video-button" data-video="{{ video.video }}">
-                        <img src="{{ url_for('get_thumbnail', thumbnail_key=video.thumbnail) }}" alt="Thumbnail" class="thumbnail">
-                        <span>{{ video.name }}</span>
-                    </button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
+    {% if error_message %}
+        <p class="error-message">{{ error_message }}</p>
+    {% else %}
+        <ul class="video-list">
+            {% for video in videos %}
+                <li class="video-item">
+                    <form action="/select_video" method="post">
+                        <input type="hidden" name="video" value="{{ video.video }}">
+                        <button type="submit" class="video-button" data-video="{{ video.video }}">
+                            <img src="{{ url_for('get_thumbnail', thumbnail_key=video.thumbnail) }}" alt="Thumbnail" class="thumbnail">
+                            <span>{{ video.name }}</span>
+                        </button>
+                    </form>
+                </li>
+            {% else %}
+                <li>No videos available.</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </body>
 </html>
