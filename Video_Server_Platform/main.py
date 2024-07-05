@@ -26,6 +26,18 @@ def generate_presigned_url():
                                  region_name=os.getenv('AWS_REGION'))
 
         app.logger.info(f"Generating presigned URL for bucket: {bucket_name}, key: {video_key}")
+        
+        # Check if the object exists before generating the presigned URL
+        try:
+            s3_client.head_object(Bucket=bucket_name, Key=video_key)
+            app.logger.info(f"Object {video_key} exists in bucket {bucket_name}")
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                app.logger.error(f"Object {video_key} does not exist in bucket {bucket_name}")
+                return jsonify({'error': f"Video file {video_key} not found in bucket"}), 404
+            else:
+                raise
+
         presigned_url = s3_client.generate_presigned_url(
             'get_object',
             Params={'Bucket': bucket_name, 'Key': video_key},
