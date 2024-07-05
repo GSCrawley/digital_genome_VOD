@@ -53,7 +53,7 @@ def index():
         if response.status_code == 200:
             videos_with_thumbnails = response.json()
             for video in videos_with_thumbnails:
-                video['thumbnail'] = url_for('get_thumbnail', thumbnail_key=video['thumbnail'])
+                video['thumbnail'] = video['thumbnail']
         else:
             videos_with_thumbnails = []
             app.logger.error(f"Failed to fetch videos. Status code: {response.status_code}")
