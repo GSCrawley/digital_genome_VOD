@@ -82,7 +82,7 @@
 </div>
 
     <!-- Video.js JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.18.1/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.18.1/video.min.js"></script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -107,76 +107,80 @@
             });
             
             player.on('timeupdate', function() {
+                player.playbackRate(1); // Sets the playback rate to normal speed
                 var currentTime = player.currentTime();
+                
                 elapsedTimeElem.textContent = currentTime.toFixed(2);
                 if (currentTime - lastUpdateTime >= 1) {
                     socket.emit('timeupdate', { time: currentTime });
                     lastUpdateTime = currentTime;
                 }
+                console.log('Timeupdate event fired', player.currentTime());
+                console.log('Playback rate:', player.playbackRate());
             });
 
-            // Error handling
-            player.on('error', function() {
-                var error = player.error();
-                var errorMessage = 'An error occurred: ';
-                switch (error.code) {
-                    case 1:
-                        errorMessage += 'MEDIA_ERR_ABORTED - The video playback was aborted.';
-                        break;
-                    case 2:
-                        errorMessage += 'MEDIA_ERR_NETWORK - A network error caused the video download to fail.';
-                        break;
-                    case 3:
-                        errorMessage += 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support.';
-                        break;
-                    case 4:
-                        errorMessage += 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported.';
-                        break;
-                    default:
-                        errorMessage += 'An unknown error occurred.';
-                        break;
-                }
-                addLog(errorMessage);
-                console.error(errorMessage);
-                console.error('Detailed error object:', error);
+            // // Error handling
+            // player.on('error', function() {
+            //     var error = player.error();
+            //     var errorMessage = 'An error occurred: ';
+            //     switch (error.code) {
+            //         case 1:
+            //             errorMessage += 'MEDIA_ERR_ABORTED - The video playback was aborted.';
+            //             break;
+            //         case 2:
+            //             errorMessage += 'MEDIA_ERR_NETWORK - A network error caused the video download to fail.';
+            //             break;
+            //         case 3:
+            //             errorMessage += 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support.';
+            //             break;
+            //         case 4:
+            //             errorMessage += 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported.';
+            //             break;
+            //         default:
+            //             errorMessage += 'An unknown error occurred.';
+            //             break;
+            //     }
+            //     addLog(errorMessage);
+            //     console.error(errorMessage);
+            //     console.error('Detailed error object:', error);
                 
-                // Display error message to the user
-                var errorDisplay = document.createElement('div');
-                errorDisplay.className = 'vjs-error-display';
-                errorDisplay.style.display = 'block';
-                errorDisplay.innerHTML = `
-                    <div class="vjs-modal-dialog">
-                        <div class="vjs-modal-dialog-content">
-                            ${errorMessage}<br>
-                            Error details: ${error.message}<br>
-                            Please try refreshing the page or contact support if the issue persists.
-                        </div>
-                    </div>
-                `;
-                player.el().appendChild(errorDisplay);
+            //     // Display error message to the user
+            //     var errorDisplay = document.createElement('div');
+            //     errorDisplay.className = 'vjs-error-display';
+            //     errorDisplay.style.display = 'block';
+            //     errorDisplay.innerHTML = `
+            //         <div class="vjs-modal-dialog">
+            //             <div class="vjs-modal-dialog-content">
+            //                 ${errorMessage}<br>
+            //                 Error details: ${error.message}<br>
+            //                 Please try refreshing the page or contact support if the issue persists.
+            //             </div>
+            //         </div>
+            //     `;
+            //     player.el().appendChild(errorDisplay);
 
-                // Attempt to reload the video after a short delay
-                setTimeout(function() {
-                    player.src({ type: 'video/mp4', src: '{{ video_url }}' });
-                    player.load();
-                    addLog('Attempting to reload the video');
-                }, 5000);
-            });
+            //     // Attempt to reload the video after a short delay
+            //     setTimeout(function() {
+            //         player.src({ type: 'video/mp4', src: '{{ video_url }}' });
+            //         player.load();
+            //         addLog('Attempting to reload the video');
+            //     }, 5000);
+            // });
 
-            // Add event listener for loadeddata
-            player.on('loadeddata', function() {
-                addLog('Video data loaded successfully');
-            });
+            // // Add event listener for loadeddata
+            // player.on('loadeddata', function() {
+            //     addLog('Video data loaded successfully');
+            // });
 
-            // Add event listener for loadedmetadata
-            player.on('loadedmetadata', function() {
-                addLog('Video metadata loaded successfully');
-            });
+            // // Add event listener for loadedmetadata
+            // player.on('loadedmetadata', function() {
+            //     addLog('Video metadata loaded successfully');
+            // });
 
-            // Add event listener for loadstart
-            player.on('loadstart', function() {
-                addLog('Started loading video');
-            });
+            // // Add event listener for loadstart
+            // player.on('loadstart', function() {
+            //     addLog('Started loading video');
+            // });
 
             // Listen for server switch events
             socket.on('server_switch', function(data) {

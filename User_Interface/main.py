@@ -48,22 +48,21 @@ def setup():
 @app.route('/')
 def index():
     global current_url
-    try:
-        response = requests.get(f"{current_url}/videos", timeout=5)
-        if response.status_code == 200:
-            videos_with_thumbnails = response.json()
-            for video in videos_with_thumbnails:
-                video['thumbnail'] = video['thumbnail']
-        else:
-            videos_with_thumbnails = []
-            app.logger.error(f"Failed to fetch videos. Status code: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        videos_with_thumbnails = []
-        app.logger.error(f"Error connecting to video server: {str(e)}")
+    response = requests.get(f"{current_url}/videos")
+    print("Response from video service:", response.json())
+    items = response.json() if response.status_code == 200 else []
+    # Assuming `items` is now a list of dictionaries with 'name', 'video', and 'thumbnail' keys
+    videos_with_thumbnails = [
+        {
+            'name': item.get('name'),  # Assuming each item has a 'name'
+            'video': item.get('video'),  # Assuming each item has a 'video' URL or identifier
+            'thumbnail': item.get('thumbnail')  # Assuming each item has a 'thumbnail' URL or identifier
+        } for item in items if isinstance(item, dict)
+    ]
 
-    return render_template('video_list.html', videos=videos_with_thumbnails, error_message=None if videos_with_thumbnails else "Unable to fetch videos. Please try again later.")
+    return render_template('video_list.html', videos=videos_with_thumbnails)
 
-@app.route('/thumbnail/<path:thumbnail_key>')
+@app.route('/thumbnail/<thumbnail_key>')
 def get_thumbnail(thumbnail_key):
     global current_url
     try:
@@ -83,41 +82,30 @@ def select_video():
     # Redirect to video feed route with selected video key
     return redirect(url_for('watch_video', video_key=selected_video))
 
-@app.route('/video_feed/<path:video_key>', methods=['GET'])
+@app.route('/video_feed/<video_key>', methods=['GET'])
 def video_feed(video_key):
     global current_url
     check_primary_availability()
-    video_feed_url = f"{current_url}/presigned"
+    video_feed_url = f"{current_url}/video/{video_key}"
     try:
-        response = requests.post(video_feed_url, json={'video_key': video_key})
+        response = requests.get(video_feed_url, stream=True)
         print("NOW STREAMING FROM:", current_url)
+
         if response.status_code == 200:
-            presigned_url = response.json().get('presigned_url')
-            if presigned_url:
-                return redirect(presigned_url)
-            else:
-                print("No presigned URL received")
-                return "Error: No presigned URL received", 500
-        elif response.status_code == 404:
-            print(f"Video not found: {video_key}")
-            return f"Video not found: {video_key}", 404
-        else:
-            print(f"Error retrieving video. Status code: {response.status_code}")
-            return f"Error retrieving video. Status code: {response.status_code}", response.status_code
+            return Response(response.iter_content(chunk_size=1024), content_type='video/mp4')
+            # resp.headers['Accept-Ranges'] = 'bytes'
+            # resp.headers['Content-Range'] = response.headers.get('Content-Range', '*')
+            # return resp
+
     except Exception as e:  # Catch all exceptions
         print(f"An error occurred: {e}")
-        return f"An error occurred: {str(e)}", 500
+        return "An error occurred", 500 
 
-# @app.after_request
-# def add_header(response):
-#     response.headers['X-Content-Type-Options'] = 'nosniff'
-#     return response
-
-@app.route('/watch/<path:video_key>')
+@app.route('/watch/<video_key>')
 def watch_video(video_key):
     global current_url
     video_feed_url = url_for('video_feed', video_key=video_key)
-    return render_template('video_player.html', video_key=video_key, current_server_url=current_url)
+    return render_template('video_player.html', video_url=video_feed_url, current_server_url=current_url)
 
 
 def video_selection_event(selected_video):
