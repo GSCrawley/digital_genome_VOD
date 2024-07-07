@@ -15,7 +15,7 @@ app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY
 jwt = JWTManager(app)
 
-event_url = "http://localhost:5000"  # Assuming the Events node is running on localhost:5000
+event_url = "http://localhost:5006"  # Assuming the Events node is running on localhost:5000
 
 @app.route('/register', methods=['POST'])
 def register():
