@@ -1,5 +1,5 @@
 # Events
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from tigerGraph import video_selected_event
 from structuralGraph import structural_setup_event, client_connection_event, create_video_client_event
 
