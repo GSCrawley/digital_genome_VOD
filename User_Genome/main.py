@@ -1,6 +1,6 @@
 import config
-from flask import Flask, jsonify, request, render_template, redirect, url_for
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask import Flask, jsonify, request, render_template, redirect, url_for, make_response
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, unset_jwt_cookies
 import requests
 
 app = Flask(__name__)
@@ -21,8 +21,9 @@ def login():
         if response.status_code == 200:
             user_data = response.json()
             access_token = create_access_token(identity=user_data['id'])
-            # Here you would typically set the access token in a cookie or send it to the client
-            return redirect(url_for('profile'))
+            resp = make_response(redirect(url_for('profile')))
+            resp.set_cookie('access_token_cookie', access_token)
+            return resp
         else:
             return render_template('login.html', error="Invalid credentials")
     return render_template('login.html')
@@ -49,6 +50,12 @@ def profile():
         return render_template('profile.html', user=user_data)
     else:
         return jsonify({"message": "Failed to fetch user data"}), 400
+
+@app.route('/logout')
+def logout():
+    resp = make_response(redirect(url_for('login')))
+    unset_jwt_cookies(resp)
+    return resp
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
