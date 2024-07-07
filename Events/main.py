@@ -9,6 +9,15 @@ app = Flask(__name__)
 def hello_world():
     return 'Events Server Working'
 
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    # Here you would typically validate the data and create a new user in TigerGraph
+    # For now, let's just print the data and return a success message
+    print("Registering new user:", data)
+    # TODO: Implement user creation in TigerGraph
+    return jsonify({"message": "User registered successfully"}), 200
+
 @app.route('/video_selected_event', methods=['GET', 'POST'])
 def video_selected():
     data = request.get_json()
