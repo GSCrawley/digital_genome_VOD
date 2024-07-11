@@ -126,6 +126,9 @@
             addLog('Switched to ' + data.new_server_url);                              
             updateServerColor();                                    
         });                                                                                                    
+
+        // Call updateServerColor initially to set the correct color on page load
+        updateServerColor();
                                                                                 
         function addLog(message) {                                         
             var logMessage = document.createElement('div');                
