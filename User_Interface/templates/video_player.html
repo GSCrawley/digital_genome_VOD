@@ -31,7 +31,7 @@
             position: fixed;                                                   
             top: 50px;                                                         
             right: 50px;                                                       
-            background: white;                                                 
+            background: #FFA500; /* Initial color set to orange */                                                 
             color: black;                                                      
             padding: 10px;                                                     
             border: 1px solid black;                                           
@@ -93,6 +93,9 @@
         var elapsedTimeElem = document.getElementById('elapsed_time');     
         var logElem = document.getElementById('log');                      
         var lastUpdateTime = player.currentTime();                         
+
+        // Call updateServerColor immediately when the page loads
+        updateServerColor();
                                                                                 
         // Handlers for video playback events                              
         player.on('play', function() {                                     
@@ -177,7 +180,6 @@
             return `rgb(${r}, ${g}, ${b})`;                                            
     }                                                                 
                                                                                                                  
-    updateServerColor();                      
     });                                                                    
     </script>                                                                  
  </body>                                                                        
