@@ -1,224 +1,184 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Video Player</title>
-    <!-- Video.js CSS -->
-    <link href="https://vjs.zencdn.net/7.18.1/video-js.css" rel="stylesheet">
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #000;
-            color: #fff;
-        }
-        .video-js {
-            width: 640px;
-            height: 480px;
-        }
-        #videoPlayerContainer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            /* width: 75%; */
-            height: auto; /* Adjust as needed */
-        }
-        #modal {
-            position: fixed;
-            top: 60%; /* Adjust as needed */
-            left: 50%;
-            background: white !important;
-            color: black !important;
-            padding: 10px;
-            border: 1px solid black;
-            z-index: 10000 !important;
-            cursor: move;
-        }
-        #modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: move;
-        }
-        #modal-content {
-            margin-top: 10px;
-        }
-        #close-button {
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        #log {
-            max-height: 100px;
-            overflow-y: auto;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'> 
-        <source src="{{ video_url }}" type="video/mp4">
-        <p class="vjs-no-js">
-            To view this video please enable JavaScript, and consider upgrading to a web browser that
-            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
-        </p>
-    </video>
-
-     <!-- The modal container -->
-<div id="modal">
-    <div id="modal-header">
-        <span>Currently streaming from: <span id="current_server"> {{ current_server_url }}</span></span>
-        <button id="close-button">&times;</button>
-    </div>
-    <div id="modal-content">
-        <div>Current elapsed time: <span id="elapsed_time">0</span> seconds</div>
-        <div id="log"></div>
-    </div>
-</div>
-
-    <!-- Video.js JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.18.1/video.min.js"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>     
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            var player = videojs('my-video', {
-                errorDisplay: false
-            });
-            var socket = io.connect(window.location.origin);            
-            var currentServer = document.getElementById('current_server');
-            var elapsedTimeElem = document.getElementById('elapsed_time');
-            var logElem = document.getElementById('log');
-            var lastUpdateTime = player.currentTime();
-
-            // Handlers for video playback events
-            player.on('play', function() {
-                socket.emit('play', { time: player.currentTime() });
-                addLog('Play');
-            });
-            
-            player.on('pause', function() {
-                socket.emit('pause', { time: player.currentTime() });
-                addLog('Pause');
-            });
-            
-            player.on('timeupdate', function() {
-                player.playbackRate(1); // Sets the playback rate to normal speed
-                var currentTime = player.currentTime();
-                
-                elapsedTimeElem.textContent = currentTime.toFixed(2);
-                if (currentTime - lastUpdateTime >= 1) {
-                    socket.emit('timeupdate', { time: currentTime });
-                    lastUpdateTime = currentTime;
-                }
-                console.log('Timeupdate event fired', player.currentTime());
-                console.log('Playback rate:', player.playbackRate());
-            });
-
-            // // Error handling
-            // player.on('error', function() {
-            //     var error = player.error();
-            //     var errorMessage = 'An error occurred: ';
-            //     switch (error.code) {
-            //         case 1:
-            //             errorMessage += 'MEDIA_ERR_ABORTED - The video playback was aborted.';
-            //             break;
-            //         case 2:
-            //             errorMessage += 'MEDIA_ERR_NETWORK - A network error caused the video download to fail.';
-            //             break;
-            //         case 3:
-            //             errorMessage += 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support.';
-            //             break;
-            //         case 4:
-            //             errorMessage += 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported.';
-            //             break;
-            //         default:
-            //             errorMessage += 'An unknown error occurred.';
-            //             break;
-            //     }
-            //     addLog(errorMessage);
-            //     console.error(errorMessage);
-            //     console.error('Detailed error object:', error);
-                
-            //     // Display error message to the user
-            //     var errorDisplay = document.createElement('div');
-            //     errorDisplay.className = 'vjs-error-display';
-            //     errorDisplay.style.display = 'block';
-            //     errorDisplay.innerHTML = `
-            //         <div class="vjs-modal-dialog">
-            //             <div class="vjs-modal-dialog-content">
-            //                 ${errorMessage}<br>
-            //                 Error details: ${error.message}<br>
-            //                 Please try refreshing the page or contact support if the issue persists.
-            //             </div>
-            //         </div>
-            //     `;
-            //     player.el().appendChild(errorDisplay);
-
-            //     // Attempt to reload the video after a short delay
-            //     setTimeout(function() {
-            //         player.src({ type: 'video/mp4', src: '{{ video_url }}' });
-            //         player.load();
-            //         addLog('Attempting to reload the video');
-            //     }, 5000);
-            // });
-
-            // // Add event listener for loadeddata
-            // player.on('loadeddata', function() {
-            //     addLog('Video data loaded successfully');
-            // });
-
-            // // Add event listener for loadedmetadata
-            // player.on('loadedmetadata', function() {
-            //     addLog('Video metadata loaded successfully');
-            // });
-
-            // // Add event listener for loadstart
-            // player.on('loadstart', function() {
-            //     addLog('Started loading video');
-            // });
-
-            // Listen for server switch events
-            socket.on('server_switch', function(data) {
-                currentServer.textContent = data.new_server_url;
-                addLog('Switched to ' + data.new_server_url);
-            });
-
-            function addLog(message) {
-                var logMessage = document.createElement('div');
-                logMessage.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
-                logElem.appendChild(logMessage);
-                logElem.scrollTop = logElem.scrollHeight;
-            }
-
-            // Draggable modal
-            var modal = document.getElementById('modal');
-            var modalHeader = document.getElementById('modal-header');
-            var closeButton = document.getElementById('close-button');
-
-            var offsetX, offsetY;
-
-            modalHeader.onmousedown = function(e) {
-                offsetX = e.clientX - modal.offsetLeft;
-                offsetY = e.clientY - modal.offsetTop;
-                document.onmousemove = function(e) {
-                    modal.style.left = (e.clientX - offsetX) + 'px';
-                    modal.style.top = (e.clientY - offsetY) + 'px';
-                }
-                document.onmouseup = function() {
-                    document.onmousemove = null;
-                    document.onmouseup = null;
-                }
-            }
-
-            closeButton.onclick = function() {
-                modal.style.display = 'none';
-            }
-        });
-    </script>
-</body>
-</html>
+<!DOCTYPE html>                                                                
+ <html lang="en">                                                               
+ <head>                                                                         
+     <meta charset="UTF-8">                                                     
+     <title>Video Player</title>                                                
+     <!-- Video.js CSS -->                                                      
+     <link href="https://vjs.zencdn.net/7.18.1/video-js.css" rel="stylesheet">  
+     <style>                                                                    
+         body {                                                                 
+             display: flex;                                                     
+             flex-direction: column;                                            
+             align-items: center;                                               
+             justify-content: center;                                           
+             height: 100vh;                                                     
+             margin: 0;                                                         
+             background-color: #000;                                            
+             color: #fff;                                                       
+         }                                                                      
+         .video-js {                                                            
+             width: 640px;                                                      
+             height: 480px;                                                     
+         }                                                                      
+         #videoPlayerContainer {                                                
+             display: flex;                                                     
+             justify-content: center;                                           
+             align-items: center;                                               
+             /* width: 75%; */                                                  
+             height: auto; /* Adjust as needed */                               
+         }                                                                      
+         #modal {                                                               
+            position: fixed;                                                   
+            top: 50px;                                                         
+            right: 50px;                                                       
+            background: white;                                                 
+            color: black;                                                      
+            padding: 10px;                                                     
+            border: 1px solid black;                                           
+            z-index: 10000;                                                    
+            width: 300px; 
+            display: flex;                                                     
+            justify-content: space-between;                                    
+            align-items: center;                                                      
+         }                                                                      
+         
+        #modal-content {                                                        
+            margin-top: 10px;                                                          
+            transition: background-color 1s ease;                                                 
+         }                                                                        
+                                                                          
+         #close-button {                                                        
+             background: none;                                                  
+             border: none;                                                      
+             font-size: 16px;                                                   
+             cursor: pointer;                                                   
+         }                                                                      
+         #log {                                                                 
+             max-height: 100px;                                                 
+             overflow-y: auto;                                                  
+             font-size: 14px;                                                   
+         }                                                                      
+     </style>                                                                   
+ </head>                                                                        
+ <body>                                                                         
+     <video id="my-video" class="video-js vjs-default-skin" controls preload="auto" width="640" height="264" data-setup='{"playbackRates": [0.5, 1, 1.5, 2]}'>                                                                     
+         <source src="{{ video_url }}" type="video/mp4">                        
+         <p class="vjs-no-js">                                                  
+            <a href="https://videojs.com/html5-video-support/" target="_blank"> To view this video please enable JavaScript, and consider upgrading  to a web browser that supports HTML5 video</a>                                       
+         </p>                                                                   
+     </video>                                                                   
+                                                                                
+      <!-- The modal container -->                                              
+ <div id="modal">                                                               
+     <div id="modal-content">                                                    
+         <span>Currently streaming from: <span id="current_server"> {{ current_server_url }}</span></span>                                            
+         <button id="close-button">&times;</button>                             
+     </div>                                                                     
+     <div id="modal-content">                                                   
+         <div>Current elapsed time: <span id="elapsed_time">0</span>            
+ seconds</div>                                                                  
+         <div id="log"></div>                                                   
+     </div>                                                                     
+ </div>                                                                         
+                                                                                
+     <!-- Video.js JavaScript -->                                               
+     <script                                                                    
+ src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.18.1/video.min.js"></script>                                                                            
+     <script                                                                    
+ src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>                                                                            
+     <script>                                                                   
+    document.addEventListener('DOMContentLoaded', () => {                  
+        var player = videojs('my-video', {                                 
+            errorDisplay: false                                            
+            });                                                                
+        var socket = io.connect(window.location.origin);                   
+        var currentServer = document.getElementById('current_server');     
+        var elapsedTimeElem = document.getElementById('elapsed_time');     
+        var logElem = document.getElementById('log');                      
+        var lastUpdateTime = player.currentTime();                         
+                                                                                
+        // Handlers for video playback events                              
+        player.on('play', function() {                                     
+            socket.emit('play', { time: player.currentTime() });           
+            addLog('Play');                                                
+        });                                                                
+                                                                                
+        player.on('pause', function() {                                    
+            socket.emit('pause', { time: player.currentTime() });          
+            addLog('Pause');                                               
+        });                                                                
+                                                                                
+        player.on('timeupdate', function() {                               
+            player.playbackRate(1); // Sets the playback rate to normal speed                                                                          
+            var currentTime = player.currentTime();                        
+                                                                                
+            elapsedTimeElem.textContent = currentTime.toFixed(2);          
+            if (currentTime - lastUpdateTime >= 1) {                       
+                socket.emit('timeupdate', { time: currentTime });          
+                lastUpdateTime = currentTime;                              
+            }                                                              
+            console.log('Timeupdate event fired', player.currentTime());   
+            console.log('Playback rate:', player.playbackRate());          
+        });                                                                
+                                                                                
+        socket.on('server_switch', function(data) {                                    
+            currentServer.textContent = data.new_server_url;                           
+            addLog('Switched to ' + data.new_server_url);                              
+            updateServerColor();                                    
+        });                                                                                                    
+                                                                                
+        function addLog(message) {                                         
+            var logMessage = document.createElement('div');                
+            logMessage.textContent = `${new Date().toLocaleTimeString()} - ${message}`;                                                                   
+            logElem.appendChild(logMessage);                               
+            logElem.scrollTop = logElem.scrollHeight;                      
+        }                                                                  
+                                                                                
+        function updateServerColor() {                                        
+            var modalContent = document.getElementById('modal-content');               
+            var currentServerUrl = document.getElementById('current_server').textContent;                         
+            var targetColor = currentServerUrl.includes('5001') ? '#FFA500' : '#0000FF';      
+            fadeBackgroundColor(modalContent, targetColor);                            
+        }                                                                                                                                        
+                                                                                
+        function fadeBackgroundColor(element, newColor) {                              
+            var startColor = getComputedStyle(element).backgroundColor;                
+            var start = new Date().getTime();                                          
+            var duration = 1000; // 1 second                                                                                      
+            function animate() {                                                       
+                var now = new Date().getTime();                                        
+                var elapsed = now - start;                                             
+                var progress = elapsed / duration;                                     
+                                                                                
+                if (progress > 1) progress = 1;                                        
+                                                                                
+                element.style.backgroundColor = interpolateColor(startColor, newColor, progress);                                                                     
+                                                                                
+                if (progress < 1) {                                                    
+                    requestAnimationFrame(animate);                                    
+                }                                                                      
+            }                                                                                    
+                                                                                
+            animate();                                                                 
+        }                                                               
+                                                                                
+        function interpolateColor(startColor, endColor, progress) {                    
+            function parseColor(color) {                                               
+                return color.match(/\d+/g).map(Number);                                
+            }                                                                          
+                                                                                
+            var start = parseColor(startColor);                                        
+            var end = parseColor(endColor);                                            
+                                                                                
+            var r = Math.round(start[0] + (end[0] - start[0]) * progress);             
+            var g = Math.round(start[1] + (end[1] - start[1]) * progress);             
+            var b = Math.round(start[2] + (end[2] - start[2]) * progress);             
+                                                                                
+            return `rgb(${r}, ${g}, ${b})`;                                            
+    }                                                                 
+                                                                                                                 
+    updateServerColor();                      
+    });                                                                    
+    </script>                                                                  
+ </body>                                                                        
+ </html>                
