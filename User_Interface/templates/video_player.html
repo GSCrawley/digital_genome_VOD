@@ -129,6 +129,17 @@
 
         // Call updateServerColor initially to set the correct color on page load
         updateServerColor();
+
+        // Add an event listener for changes to the current_server element
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === "childList") {
+                    updateServerColor();
+                }
+            });
+        });
+
+        observer.observe(currentServer, { childList: true });
                                                                                 
         function addLog(message) {                                         
             var logMessage = document.createElement('div');                
