@@ -124,7 +124,8 @@
         socket.on('server_switch', function(data) {                                    
             currentServer.textContent = data.new_server_url;                           
             addLog('Switched to ' + data.new_server_url);                              
-            updateServerColor();                                    
+            updateServerColor();
+            console.log('Server switch event received:', data.new_server_url);                                    
         });                                                                                                    
 
         // Call updateServerColor initially to set the correct color on page load
@@ -135,6 +136,7 @@
             mutations.forEach(function(mutation) {
                 if (mutation.type === "childList") {
                     updateServerColor();
+                    console.log('MutationObserver triggered updateServerColor');
                 }
             });
         });
@@ -152,6 +154,8 @@
             var modal = document.getElementById('modal');               
             var currentServerUrl = document.getElementById('current_server').textContent;                         
             var targetColor = currentServerUrl.includes('5001') ? '#FFA500' : '#0000FF';      
+            console.log('Current server URL:', currentServerUrl);
+            console.log('Target color:', targetColor);
             fadeBackgroundColor(modal, targetColor);   
             console.log('Updating server color to:', targetColor, 'for server:', currentServerUrl);                         
         }                                                                                                                                        
@@ -167,10 +171,14 @@
                                                                                 
                 if (progress > 1) progress = 1;                                        
                                                                                 
-                element.style.backgroundColor = interpolateColor(startColor, newColor, progress);                                                                     
+                var interpolatedColor = interpolateColor(startColor, newColor, progress);
+                element.style.backgroundColor = interpolatedColor;                                                                     
+                console.log('Interpolated color:', interpolatedColor);
                                                                                 
                 if (progress < 1) {                                                    
                     requestAnimationFrame(animate);                                    
+                } else {
+                    console.log('Color transition complete');
                 }                                                                      
             }                                                                                    
                                                                                 
