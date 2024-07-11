@@ -138,10 +138,10 @@
         }                                                                  
                                                                                 
         function updateServerColor() {                                        
-            var modalContent = document.getElementById('modal-content');               
+            var modal = document.getElementById('modal');               
             var currentServerUrl = document.getElementById('current_server').textContent;                         
             var targetColor = currentServerUrl.includes('5001') ? '#FFA500' : '#0000FF';      
-            fadeBackgroundColor(modalContent, targetColor);                            
+            fadeBackgroundColor(modal, targetColor);                            
         }                                                                                                                                        
                                                                                 
         function fadeBackgroundColor(element, newColor) {                              
