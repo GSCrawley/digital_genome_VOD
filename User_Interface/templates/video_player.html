@@ -31,7 +31,6 @@
             position: fixed;                                                   
             top: 50px;                                                         
             right: 50px;                                                       
-            background: #FFA500; /* Initial color set to orange */                                                 
             color: black;                                                      
             padding: 10px;                                                     
             border: 1px solid black;                                           
@@ -94,7 +93,8 @@
         var logElem = document.getElementById('log');                      
         var lastUpdateTime = player.currentTime();                         
 
-        // Call updateServerColor immediately when the page loads
+        // Set initial color and call updateServerColor immediately when the page loads
+        document.getElementById('modal').style.backgroundColor = '#FFA500';
         updateServerColor();
                                                                                 
         // Handlers for video playback events                              
@@ -152,7 +152,8 @@
             var modal = document.getElementById('modal');               
             var currentServerUrl = document.getElementById('current_server').textContent;                         
             var targetColor = currentServerUrl.includes('5001') ? '#FFA500' : '#0000FF';      
-            fadeBackgroundColor(modal, targetColor);                            
+            fadeBackgroundColor(modal, targetColor);   
+            console.log('Updating server color to:', targetColor, 'for server:', currentServerUrl);                         
         }                                                                                                                                        
                                                                                 
         function fadeBackgroundColor(element, newColor) {                              
