@@ -94,9 +94,8 @@
         var logElem = document.getElementById('log');                      
         var lastUpdateTime = player.currentTime();                         
 
-        // Set initial color and call updateServerColor immediately when the page loads
-        document.getElementById('modal').style.backgroundColor = '#FFA500';
-        updateServerColor();
+        // Set initial color to green
+        document.getElementById('modal').style.backgroundColor = '#00FF00';
                                                                                 
         // Handlers for video playback events                              
         player.on('play', function() {                                     
@@ -137,8 +136,10 @@
             console.log('Server switch event received:', data.new_server_url);
         });
 
-        // Set initial color to green
-        modal.style.backgroundColor = '#00FF00';
+        // Update elapsed time
+        setInterval(function() {
+            elapsedTimeElem.textContent = player.currentTime().toFixed(2);
+        }, 100);
 
         function addLog(message) {
             var logMessage = document.createElement('div');
