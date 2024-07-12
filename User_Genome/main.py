@@ -2,6 +2,7 @@ import config
 from flask import Flask, jsonify, request, render_template, redirect, url_for, make_response
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, unset_jwt_cookies
 import requests
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY
@@ -31,7 +32,15 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        data = request.form
+        data = {
+            'first_name': request.form.get('first_name'),
+            'last_name': request.form.get('last_name'),
+            'username': request.form.get('username'),
+            'email': request.form.get('email'),
+            'password': request.form.get('password'),
+            'location': request.form.get('location'),
+            'join_date': datetime.now().isoformat()
+        }
         response = requests.post(f"{event_url}/register", json=data)
         if response.status_code == 200:
             return redirect(url_for('login'))

@@ -39,7 +39,8 @@
             display: flex;                                                     
             justify-content: space-between;                                    
             align-items: center;        
-            margin-top: 10px;                                                          
+            margin-top: 10px;    
+            margin-left: 20px;                                                      
             transition: background-color 1s ease;                                                  
          }                                                                                                                                           
                                                                           
@@ -124,12 +125,12 @@
         socket.on('server_switch', function(data) {                                    
             currentServer.textContent = data.new_server_url;                           
             addLog('Switched to ' + data.new_server_url);                              
-            updateServerColor();
+            // updateServerColor();
             console.log('Server switch event received:', data.new_server_url);                                    
         });                                                                                                    
 
         // Call updateServerColor initially to set the correct color on page load
-        updateServerColor();
+        // updateServerColor();
 
         // Add an event listener for changes to the current_server element
         var observer = new MutationObserver(function(mutations) {
@@ -200,7 +201,7 @@
             return `rgb(${r}, ${g}, ${b})`;                                            
     }                                                                 
                                                                                                                  
-    updateServerColor();                      
+    // updateServerColor();                      
     });                                                                    
     </script>                                                                  
  </body>                                                                        

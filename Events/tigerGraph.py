@@ -38,8 +38,18 @@ def video_selected_event(data):
     }
     conn.upsertVertex("Events", event_id, attributes)
 
+    
     conn.upsertEdge("User", user_id, "user_event", "Events", event_id)
     conn.upsertEdge("Video", video_id, "video_event", "Events", event_id)
     conn.upsertEdge("User", user_id, "watches", "Video", video_id)
 
     return
+
+def user_registration_event(data):
+    user_id = f"U{str(uuid.uuid4())[:8]}"
+    attributes = {
+        "username": data['username'],
+        "password": data['password']
+    }
+    conn.upsertVertex("User", user_id, attributes)
+    print(data)
