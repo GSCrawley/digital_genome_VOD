@@ -15,6 +15,8 @@ def check_primary_availability():
     try:
         response = requests.get(current_url)
         if response.status_code != 200:
+            # Emit server_switch_start event
+            socketio.emit('server_switch_start')
             # If the primary URL is down, get the new URL from the SWM
             response = requests.get(f"{url_dict['SWM']}/recover")
             new_url = response.json()  # Assume this returns the new URL
@@ -26,6 +28,8 @@ def check_primary_availability():
             # If the primary URL is up, ensure it is set as the current URL
             current_url = primary_url
     except requests.ConnectionError:
+        # Emit server_switch_start event
+        socketio.emit('server_switch_start')
         # If there is a connection error, get the new URL from the SWM
         response = requests.get(f"{url_dict['SWM']}/recover")
         new_url = response.json()  # Assume this returns the new URL
@@ -33,8 +37,8 @@ def check_primary_availability():
             # Update the current_url and notify the clients
             current_url = new_url
             socketio.emit('server_switch', {'new_server_url': current_url})
-        # Sleep for some time before checking again
-        time.sleep(1)
+    # Sleep for some time before checking again
+    time.sleep(1)
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():

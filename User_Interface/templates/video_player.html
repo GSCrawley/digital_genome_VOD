@@ -122,79 +122,29 @@
             console.log('Playback rate:', player.playbackRate());          
         });                                                                
                                                                                 
-        var isServerSwitching = false;
+        var modal = document.getElementById('modal');
 
         socket.on('server_switch_start', function() {
-            isServerSwitching = true;
-            updateServerColor();
+            modal.style.backgroundColor = '#FF0000'; // Red
             addLog('Server switch started');
             console.log('Server switch start event received');
         });
 
         socket.on('server_switch', function(data) {
             currentServer.textContent = data.new_server_url;
-            isServerSwitching = false;
-            updateServerColor();
+            modal.style.backgroundColor = '#00FF00'; // Green
             addLog('Switched to ' + data.new_server_url);
             console.log('Server switch event received:', data.new_server_url);
         });
 
-        // Call updateServerColor initially to set the correct color on page load
-        updateServerColor();
-                                                                                
-        function addLog(message) {                                         
-            var logMessage = document.createElement('div');                
-            logMessage.textContent = `${new Date().toLocaleTimeString()} - ${message}`;                                                                   
-            logElem.appendChild(logMessage);                               
-            logElem.scrollTop = logElem.scrollHeight;                      
-        }                                                                  
-                                                                                
-        function updateServerColor() {
-            var modal = document.getElementById('modal');
-            var targetColor = isServerSwitching ? '#FF0000' : '#00FF00';
-            console.log('Updating server color to:', targetColor, 'Server switching:', isServerSwitching);
-            fadeBackgroundColor(modal, targetColor);
-        }
+        // Set initial color to green
+        modal.style.backgroundColor = '#00FF00';
 
-        function fadeBackgroundColor(element, newColor) {
-            var startColor = getComputedStyle(element).backgroundColor;
-            var start = new Date().getTime();
-            var duration = 1000; // 1 second
-
-            function animate() {
-                var now = new Date().getTime();
-                var elapsed = now - start;
-                var progress = elapsed / duration;
-
-                if (progress > 1) progress = 1;
-
-                var interpolatedColor = interpolateColor(startColor, newColor, progress);
-                element.style.backgroundColor = interpolatedColor;
-                console.log('Interpolated color:', interpolatedColor);
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    console.log('Color transition complete');
-                }
-            }
-
-            animate();
-        }
-
-        function interpolateColor(startColor, endColor, progress) {
-            function parseColor(color) {
-                return color.match(/\d+/g).map(Number);
-            }
-
-            var start = parseColor(startColor);
-            var end = parseColor(endColor);
-
-            var r = Math.round(start[0] + (end[0] - start[0]) * progress);
-            var g = Math.round(start[1] + (end[1] - start[1]) * progress);
-            var b = Math.round(start[2] + (end[2] - start[2]) * progress);
-
-            return `rgb(${r}, ${g}, ${b})`;
+        function addLog(message) {
+            var logMessage = document.createElement('div');
+            logMessage.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logElem.appendChild(logMessage);
+            logElem.scrollTop = logElem.scrollHeight;
         }
     });                                                                    
     </script>                                                                  
