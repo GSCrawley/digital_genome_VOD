@@ -1,6 +1,6 @@
 # Events
 from flask import Flask, request, jsonify
-from tigerGraph import video_selected_event, user_registration_event
+from tigerGraph import video_selected_event, user_registration_event, validate_login
 from structuralGraph import structural_setup_event, client_connection_event, create_video_client_event
 
 app = Flask(__name__)
@@ -12,19 +12,25 @@ def hello_world():
 @app.route('/register', methods=['POST'])
 def register():
     data = request.json
-    # Here you would typically validate the data and create a new user in TigerGraph
-    # For now, let's just print the data and return a success message
-    print("Registering new user:", data)
-    # TODO: Implement user creation in TigerGraph
     user_registration_event(data)
     return jsonify({"message": "User registered successfully"}), 200
 
-
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    email = data['email']
+    password = data['password']
+    result = validate_login(email, password)
+    if result == 'Fail':
+        return jsonify({"message": "Fail"}), 500
+    else:
+        return jsonify(result), 200
 
 @app.route('/video_selected_event', methods=['GET', 'POST'])
 def video_selected():
     data = request.get_json()
     # send data to tigergraph
+    print("Video SELECTED")
     video_selected_event(data)
     return("HI")
 

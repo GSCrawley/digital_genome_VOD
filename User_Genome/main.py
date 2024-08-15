@@ -1,3 +1,4 @@
+# User_Genome
 import config
 from flask import Flask, jsonify, request, render_template, redirect, url_for, make_response
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, unset_jwt_cookies
@@ -5,48 +6,51 @@ import requests
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY
+# app.config['JWT_SECRET_KEY'] = config.JWT_SECRET_KEY
+app.config['JWT_SECRET_KEY'] = "test"
 jwt = JWTManager(app)
 
-event_url = "http://localhost:5006"  # Assuming the Events node is running on localhost:5006
+# event_url = "http://localhost:5006"  # Assuming the Events node is running on localhost:5006
 
 @app.route('/')
 def home():
     return redirect(url_for('login'))
 
+@app.route('/setup', methods=['GET', 'POST'])
+def setup():
+    global event_url
+    data = request.get_json()
+    url_dict = data
+    event_url = data['Events']
+    return "hi"
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        data = request.form
+        data = request.json
         response = requests.post(f"{event_url}/login", json=data)
         if response.status_code == 200:
+            # print("SUCCESS")
             user_data = response.json()
-            access_token = create_access_token(identity=user_data['id'])
-            resp = make_response(redirect(url_for('profile')))
-            resp.set_cookie('access_token_cookie', access_token)
-            return resp
+            # print(user_data['Auth'][0]['attributes']['id'])
+            # access_token = create_access_token(identity=user_data['Auth'][0]['attributes']['id'])
+            # return jsonify({'access_token': access_token}), 200
+            return jsonify({'user_identity':user_data['Auth'][0]['attributes']['id']})
+            # resp = make_response(redirect(url_for('profile')))
+        #     resp.set_cookie('access_token_cookie', access_token)
+        #     return resp
         else:
-            return render_template('login.html', error="Invalid credentials")
-    return render_template('login.html')
+            print("FAIL")
+            return jsonify({'Fail'}), 500
+        #     return render_template('login.html', error="Invalid credentials")
+    return("Hi")
+    # return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        data = {
-            'first_name': request.form.get('first_name'),
-            'last_name': request.form.get('last_name'),
-            'username': request.form.get('username'),
-            'email': request.form.get('email'),
-            'password': request.form.get('password'),
-            'location': request.form.get('location'),
-            'join_date': datetime.now().isoformat()
-        }
-        response = requests.post(f"{event_url}/register", json=data)
-        if response.status_code == 200:
-            return redirect(url_for('login'))
-        else:
-            return render_template('register.html', error="Registration failed")
-    return render_template('register.html')
+    data = request.json
+    response = requests.post(f"{event_url}/register", json=data)
+    return("hi")
 
 @app.route('/profile')
 @jwt_required()
@@ -67,4 +71,4 @@ def logout():
     return resp
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=5007)

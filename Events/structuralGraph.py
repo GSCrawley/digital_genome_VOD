@@ -1,18 +1,14 @@
+
 import pyTigerGraph as tg
 import uuid
-import os
-from dotenv import load_dotenv
 from datetime import datetime
 
-load_dotenv()
-
-
 # HIDE THESE
-host = os.getenv('TG_HOST')
-graphname = os.getenv('TG_STRUCTURAL_GRAPHNAME')
-username = os.getenv('TG_USERNAME')
-password = os.getenv('TG_PASSWORD')
-secret = os.getenv('TG_STRUCTURAL_SECRET')
+host = "https://55022d66f9ca4cf9b8b2a201dbe41306.i.tgcloud.io"
+graphname = "VOD_event_transaction_history"
+username = "user_4"
+password = "Af6Jp2Qk3My4Is3/"
+secret = "1c016pgajvpj0ap0nviinddelrouf6ul"
 
 conn = tg.TigerGraphConnection(host=host, graphname=graphname, username=username, password=password)
 conn.apiToken = conn.getToken(secret)
@@ -99,3 +95,4 @@ def create_video_client_event(data):
     conn.upsertEdge("Events", Events_id, "video_client_event", "Video_Client", VC_id)
     if VC_id == data['video_client'][0].replace('http://', ''):
         conn.upsertEdge("UI", UI_id, "UI_video_client", "Video_Client", VC_id)
+

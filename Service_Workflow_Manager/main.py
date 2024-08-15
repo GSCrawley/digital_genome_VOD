@@ -22,6 +22,7 @@ def setup():
 
 @app.route('/recover', methods=['GET', 'POST'])
 def recover():
+    print("RECOVERED")
     for url in video_clients:
         try:
             response = requests.get(url)
@@ -44,3 +45,5 @@ def recover():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003)
+
+
