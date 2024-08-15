@@ -1,7 +1,7 @@
 # digital_genome_VOD
 
 ## Servers must be run in the following order, in the following ports: 
-### Video Server :8080
+### Video Server :5005
 ### Video Client :5001
 ### User Interface :5000
 ### Cognitive Network Manager :5004 - this will send user back to the user interface at 5000
